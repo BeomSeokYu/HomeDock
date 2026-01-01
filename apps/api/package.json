@@ -1,0 +1,43 @@
+{
+  "name": "@homedock/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "start": "node dist/main.js",
+    "dev": "nest start --watch",
+    "predev": "prisma generate",
+    "start:dev": "nest start --watch",
+    "prestart:dev": "prisma generate",
+    "build": "prisma generate && nest build",
+    "lint": "echo 'lint not configured'",
+    "db:migrate": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@nestjs/common": "11.1.11",
+    "@nestjs/config": "4.0.2",
+    "@nestjs/core": "11.1.11",
+    "@nestjs/jwt": "11.0.2",
+    "@nestjs/passport": "11.0.5",
+    "@nestjs/platform-express": "11.1.11",
+    "@prisma/client": "5.12.1",
+    "bcryptjs": "2.4.3",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.14.1",
+    "passport": "0.7.0",
+    "passport-jwt": "4.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "11.0.14",
+    "@nestjs/schematics": "11.0.9",
+    "@types/node": "20.11.30",
+    "@types/passport-jwt": "4.0.1",
+    "@types/bcryptjs": "2.4.6",
+    "prisma": "5.12.1",
+    "ts-node": "10.9.2",
+    "typescript": "5.4.5"
+  }
+}
