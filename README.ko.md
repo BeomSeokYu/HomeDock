@@ -33,6 +33,7 @@ cp .env.example .env
    - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `JWT_SECRET`
    - `WEB_ORIGIN` (CORS 허용 도메인)
    - `NEXT_PUBLIC_API_BASE_URL` (웹 빌드에 포함됨)
+   - `NEXT_PUBLIC_SITE_URL` (사이트맵/OG 메타데이터용)
    - 필요 시 `API_PORT`, `WEB_PORT`로 포트 변경
 
 4. 빌드 & 실행:
@@ -72,3 +73,14 @@ pnpm dev:api
 - Docker Compose 사용 시 SQLite 파일은 호스트의 `./homedock-data/homedock.db`에 저장됩니다.
 - 관리자 계정은 API 부팅 시 `.env` 값으로 동기화됩니다 (이메일/비밀번호 변경 반영).
 - `NEXT_PUBLIC_API_BASE_URL`은 웹 빌드에 포함되므로 변경 시 웹 재빌드가 필요합니다.
+
+## 에셋 & 미리보기
+파비콘/앱 아이콘/미리보기 이미지는 SVG 템플릿에서 생성합니다.
+UI를 업데이트했거나 미리보기 이미지를 갱신하려면 아래 명령을 실행하세요.
+
+```bash
+pnpm assets:generate
+```
+
+참고: 에셋 생성은 `sharp`를 사용합니다. 환경에 맞는 바이너리가 없으면
+Linux/macOS에서 실행하거나 플랫폼에 맞는 빌드를 설치하세요.

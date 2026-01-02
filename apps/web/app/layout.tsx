@@ -1,8 +1,38 @@
+import type { Metadata } from 'next';
 import './globals.css';
 
-export const metadata = {
-  title: 'HomeDock',
-  description: '포트와 서브도메인을 한눈에 관리하는 홈서버 대시보드.'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'HomeDock',
+    template: '%s | HomeDock'
+  },
+  description: 'Home server dashboard for ports, subdomains, and services.',
+  applicationName: 'HomeDock',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [{ url: '/icons/favicon.svg', type: 'image/svg+xml' }]
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'HomeDock',
+    title: 'HomeDock',
+    description: 'Home server dashboard for ports, subdomains, and services.',
+    url: '/'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HomeDock',
+    description: 'Home server dashboard for ports, subdomains, and services.'
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'HomeDock',
+    statusBarStyle: 'black-translucent'
+  },
+  themeColor: '#0b0f16'
 };
 
 export default function RootLayout({
@@ -11,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <body>{children}</body>
     </html>
   );

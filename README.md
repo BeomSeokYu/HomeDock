@@ -35,6 +35,7 @@ cp .env.example .env
    - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `JWT_SECRET`
    - `WEB_ORIGIN` (CORS allowlist)
    - `NEXT_PUBLIC_API_BASE_URL` (baked into the web build)
+   - `NEXT_PUBLIC_SITE_URL` (used for sitemap and OG metadata)
    - Optional: `API_PORT`, `WEB_PORT` if you want custom ports
 
 4. Build and run:
@@ -74,3 +75,14 @@ Default ports: web `:3000`, API `:4000`.
 - Docker Compose stores SQLite at `./homedock-data/homedock.db` on the host.
 - Admin credentials are synced from `.env` on API boot (email + password updates).
 - `NEXT_PUBLIC_API_BASE_URL` is baked into the web build; rebuild when it changes.
+
+## Assets & Previews
+Brand assets (favicon, app icons, OG preview) are generated from SVG templates.
+Run this after you tweak the UI or update the preview design:
+
+```bash
+pnpm assets:generate
+```
+
+Note: the generator uses `sharp`. If your environment lacks a compatible binary,
+run it in Linux/macOS or install the proper platform build.
