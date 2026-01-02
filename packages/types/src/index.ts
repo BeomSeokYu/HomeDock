@@ -28,6 +28,11 @@ export type DashboardConfig = {
   brandName: string;
   language: 'ko' | 'en' | 'ja' | 'zh';
   serviceGridColumnsLg: number;
+  showBrand?: boolean;
+  showTitle?: boolean;
+  showDescription?: boolean;
+  dockSeparatorEnabled?: boolean;
+  themeKey?: string;
   title: string;
   description: string;
   weatherMode: 'auto' | 'manual';

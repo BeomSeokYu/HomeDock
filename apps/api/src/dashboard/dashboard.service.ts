@@ -10,6 +10,11 @@ type DashboardConfigInput = {
   brandName?: string;
   language?: 'ko' | 'en' | 'ja' | 'zh';
   serviceGridColumnsLg?: number;
+  showBrand?: boolean;
+  showTitle?: boolean;
+  showDescription?: boolean;
+  dockSeparatorEnabled?: boolean;
+  themeKey?: string;
   title?: string;
   description?: string;
   weatherMode?: 'auto' | 'manual';
@@ -147,6 +152,12 @@ export class DashboardService {
         language: config.language ?? dashboard.language,
         serviceGridColumnsLg:
           config.serviceGridColumnsLg ?? dashboard.serviceGridColumnsLg,
+        showBrand: config.showBrand ?? dashboard.showBrand,
+        showTitle: config.showTitle ?? dashboard.showTitle,
+        showDescription: config.showDescription ?? dashboard.showDescription,
+        dockSeparatorEnabled:
+          config.dockSeparatorEnabled ?? dashboard.dockSeparatorEnabled,
+        themeKey: config.themeKey ?? dashboard.themeKey,
         title: config.title ?? dashboard.title,
         description: config.description ?? dashboard.description,
         weatherMode: config.weatherMode ?? dashboard.weatherMode,

@@ -2,6 +2,11 @@ export const DEFAULT_DASHBOARD_CONFIG = {
   brandName: 'HomeDock',
   language: 'ko' as const,
   serviceGridColumnsLg: 4,
+  showBrand: true,
+  showTitle: true,
+  showDescription: true,
+  dockSeparatorEnabled: true,
+  themeKey: 'homedock',
   title: 'HomeDock 메인 대시보드',
   description:
     '홈서버에 숨겨진 모든 서비스를 하나의 런처로 정리하세요. 카테고리별 정렬, 포트/도메인 빠른 확인, 바로 실행까지 한 번에.',
