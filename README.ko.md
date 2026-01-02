@@ -6,6 +6,7 @@ Next.js + NestJS 모노레포 구성이며 SQLite 기반 설정을 사용하고,
 ## 주요 기능
 - 공개 메인 대시보드 + 관리자 전용 설정 모달
 - 카테고리 카드/정사각형 서비스 타일/즐겨찾기 Dock
+- 테마 프리셋과 헤더/도크 구분선/레이아웃 표시 토글
 - Open-Meteo 날씨 (IP 자동 위치 + 검색 기반 수동 설정)
 - 시스템 요약 카드/날씨 하단 정보의 항목·순서 커스터마이징
 - 한국어/영어/일본어/중국어 다국어 지원
@@ -13,6 +14,8 @@ Next.js + NestJS 모노레포 구성이며 SQLite 기반 설정을 사용하고,
 ## 스크린샷
 ![잠금 화면](docs/screenshots/lock-screen.png)
 ![메인 대시보드](docs/screenshots/dashboard.png)
+![설정 화면](docs/screenshots/settings-overview.png)
+![카테고리/아이템 설정](docs/screenshots/settings-services.png)
 
 ## 요구 사항
 - Node.js 18+
@@ -76,6 +79,7 @@ pnpm dev:api
 ## 참고 사항
 - Docker Compose 사용 시 SQLite 파일은 호스트의 `./homedock-data/homedock.db`에 저장됩니다.
 - 관리자 계정은 API 부팅 시 `.env` 값으로 동기화됩니다 (이메일/비밀번호 변경 반영).
+- API 컨테이너는 `prisma/migrations`가 있으면 시작 시 마이그레이션을 적용합니다.
 - `NEXT_PUBLIC_API_BASE_URL`은 웹 빌드에 포함되므로 변경 시 웹 재빌드가 필요합니다.
 
 ## 에셋 & 미리보기

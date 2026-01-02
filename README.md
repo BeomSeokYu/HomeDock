@@ -8,6 +8,7 @@ It is a Next.js + NestJS monorepo with a SQLite-backed configuration, designed f
 ## Features
 - Public dashboard with category cards, square service tiles, and a favorites dock.
 - Admin-only settings modal for brand/title/description, layout columns, and categories/services.
+- Theme presets and visibility toggles for the header, dock separators, and layout.
 - Weather via Open-Meteo (IP auto-location + manual search), with configurable metadata rows.
 - System summary card with configurable fields and order.
 - Built-in i18n: Korean, English, Japanese, Chinese.
@@ -15,6 +16,8 @@ It is a Next.js + NestJS monorepo with a SQLite-backed configuration, designed f
 ## Screenshots
 ![Lock screen](docs/screenshots/lock-screen.png)
 ![Main dashboard](docs/screenshots/dashboard.png)
+![Settings overview](docs/screenshots/settings-overview.png)
+![Settings categories](docs/screenshots/settings-services.png)
 
 ## Requirements
 - Node.js 18+
@@ -78,6 +81,7 @@ Default ports: web `:3000`, API `:4000`.
 ## Notes
 - Docker Compose stores SQLite at `./homedock-data/homedock.db` on the host.
 - Admin credentials are synced from `.env` on API boot (email + password updates).
+- API container applies migrations on startup when `prisma/migrations` exist.
 - `NEXT_PUBLIC_API_BASE_URL` is baked into the web build; rebuild when it changes.
 
 ## Assets & Previews
