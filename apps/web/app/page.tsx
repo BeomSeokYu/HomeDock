@@ -1102,7 +1102,7 @@ function IconPicker({
 
 export default function HomePage() {
   const [unlocked, setUnlocked] = useState(false);
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState<Date | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [config, setConfig] = useState<DashboardConfig>(defaultConfig);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
@@ -1149,8 +1149,14 @@ export default function HomePage() {
     settingsOpen && draftConfig ? draftConfig.language : config.language;
   const language = activeLanguage ?? defaultConfig.language;
   const locale = LOCALE_BY_LANGUAGE[language] ?? LOCALE_BY_LANGUAGE.ko;
-  const timeLabel = useMemo(() => formatTime(now, locale), [now, locale]);
-  const dateLabel = useMemo(() => formatDate(now, locale), [now, locale]);
+  const timeLabel = useMemo(
+    () => (now ? formatTime(now, locale) : '--:--'),
+    [now, locale]
+  );
+  const dateLabel = useMemo(
+    () => (now ? formatDate(now, locale) : '--'),
+    [now, locale]
+  );
   const t = useMemo(
     () => (key: TranslationKey, vars?: Record<string, string | number>) =>
       translate(language, key, vars),
@@ -1158,6 +1164,7 @@ export default function HomePage() {
   );
 
   useEffect(() => {
+    setNow(new Date());
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
