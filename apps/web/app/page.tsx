@@ -1185,15 +1185,6 @@ function normalizeConfig(input: DashboardConfig) {
   return next;
 }
 
-function applyStoredTheme(nextConfig: DashboardConfig) {
-  if (typeof window === 'undefined') return nextConfig;
-  const storedTheme = window.localStorage.getItem('homedock_theme');
-  if (storedTheme && THEME_KEYS.includes(storedTheme)) {
-    return { ...nextConfig, themeKey: storedTheme };
-  }
-  return nextConfig;
-}
-
 function createId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
@@ -1401,7 +1392,6 @@ export default function HomePage() {
 
   useEffect(() => {
     applyTheme(theme);
-    window.localStorage.setItem('homedock_theme', theme.key);
   }, [theme]);
 
   useEffect(() => {
@@ -1450,12 +1440,6 @@ export default function HomePage() {
     setToken(stored);
   }, []);
 
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem('homedock_theme');
-    if (storedTheme && THEME_KEYS.includes(storedTheme)) {
-      setConfig((prev) => ({ ...prev, themeKey: storedTheme }));
-    }
-  }, []);
 
   useEffect(() => {
     if (!dockMenuOpen) return;
@@ -1615,9 +1599,7 @@ export default function HomePage() {
         categories?: Category[];
       };
 
-      const nextConfig = applyStoredTheme(
-        normalizeConfig(data.config ?? defaultConfig)
-      );
+      const nextConfig = normalizeConfig(data.config ?? defaultConfig);
       setConfig(nextConfig);
       setCategories(data.categories?.length ? data.categories : fallbackCategories);
     } catch {
@@ -1645,7 +1627,7 @@ export default function HomePage() {
         categories?: Category[];
       };
 
-      const nextConfig = applyStoredTheme(normalizeConfig(data.config ?? config));
+      const nextConfig = normalizeConfig(data.config ?? config);
       setDraftConfig(nextConfig);
       setDraftCategories(data.categories ?? categories);
       setLocationQuery(nextConfig.weatherName ?? '');
