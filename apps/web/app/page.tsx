@@ -1361,6 +1361,7 @@ export default function HomePage() {
   const [dockVisibleCount, setDockVisibleCount] = useState(3);
   const [dockMenuOpen, setDockMenuOpen] = useState(false);
   const lockRef = useRef<HTMLDivElement | null>(null);
+  const dockRef = useRef<HTMLDivElement | null>(null);
   const dockMenuRef = useRef<HTMLDivElement | null>(null);
   const dockMoreRef = useRef<HTMLButtonElement | null>(null);
   const dragState = useRef({ active: false, startY: 0, delta: 0 });
@@ -1810,13 +1811,21 @@ export default function HomePage() {
 
   useEffect(() => {
     const updateDockCapacity = () => {
-      const viewportWidth = window.innerWidth;
-      const availableWidth = Math.max(0, viewportWidth - 48);
+      const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+      const dockStyle = dockRef.current
+        ? window.getComputedStyle(dockRef.current)
+        : null;
+      const gap = dockStyle
+        ? parseFloat(dockStyle.columnGap || dockStyle.gap || '20')
+        : 20;
+      const paddingX = dockStyle
+        ? parseFloat(dockStyle.paddingLeft) + parseFloat(dockStyle.paddingRight)
+        : 40;
+      const safeMargin = 48;
+      const availableWidth = Math.max(0, viewportWidth - safeMargin - paddingX);
       const totalFavorites = allFavorites.length;
       const itemSize = 46;
       const separatorSize = 10;
-      const gap = 20;
-      const paddingX = 20;
       const reservedWidths = (includeMore: boolean) => [
         ...(includeMore ? [itemSize] : []),
         itemSize
@@ -2446,7 +2455,7 @@ export default function HomePage() {
           </section>
         </div>
 
-        <div className="dock">
+        <div className="dock" ref={dockRef}>
           {dockEntries.map((entry) =>
             entry.type === 'separator' ? (
               <span key={entry.id} className="dock-separator" aria-hidden="true" />
