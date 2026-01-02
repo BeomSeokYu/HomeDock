@@ -1,5 +1,7 @@
 export const DEFAULT_DASHBOARD_CONFIG = {
   brandName: 'HomeDock',
+  language: 'ko' as const,
+  serviceGridColumnsLg: 4,
   title: 'HomeDock 메인 대시보드',
   description:
     '홈서버에 숨겨진 모든 서비스를 하나의 런처로 정리하세요. 카테고리별 정렬, 포트/도메인 빠른 확인, 바로 실행까지 한 번에.',
@@ -17,6 +19,12 @@ export const DEFAULT_DASHBOARD_CONFIG = {
     'uvIndex',
     'windSpeed'
   ]
+};
+
+export const DEFAULT_DASHBOARD_STORAGE = {
+  ...DEFAULT_DASHBOARD_CONFIG,
+  systemSummaryOrder: JSON.stringify(DEFAULT_DASHBOARD_CONFIG.systemSummaryOrder),
+  weatherMetaOrder: JSON.stringify(DEFAULT_DASHBOARD_CONFIG.weatherMetaOrder)
 };
 
 type DefaultService = {

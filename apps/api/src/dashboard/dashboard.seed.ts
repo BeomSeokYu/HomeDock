@@ -1,6 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { DEFAULT_CATEGORIES, DEFAULT_DASHBOARD_CONFIG } from './dashboard.defaults';
+import {
+  DEFAULT_CATEGORIES,
+  DEFAULT_DASHBOARD_STORAGE
+} from './dashboard.defaults';
 
 @Injectable()
 export class DashboardSeedService implements OnModuleInit {
@@ -14,7 +17,7 @@ export class DashboardSeedService implements OnModuleInit {
   private async ensureConfig() {
     const existing = await this.prisma.dashboard.findFirst();
     if (existing) return;
-    await this.prisma.dashboard.create({ data: DEFAULT_DASHBOARD_CONFIG });
+    await this.prisma.dashboard.create({ data: DEFAULT_DASHBOARD_STORAGE });
   }
 
   private async ensureCategories() {

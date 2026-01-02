@@ -19,6 +19,8 @@ model User {
 model Dashboard {
   id                String   @id @default(uuid())
   brandName         String   @default("HomeDock")
+  language          String   @default("ko")
+  serviceGridColumnsLg Int   @default(4)
   title             String   @default("HomeDock 메인 대시보드")
   description       String   @default("홈서버에 숨겨진 모든 서비스를 하나의 런처로 정리하세요.")
   weatherMode       String   @default("auto")
@@ -27,8 +29,8 @@ model Dashboard {
   weatherCountry    String?
   weatherLatitude   Float?
   weatherLongitude  Float?
-  systemSummaryOrder Json?
-  weatherMetaOrder   Json?
+  systemSummaryOrder String?
+  weatherMetaOrder   String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }

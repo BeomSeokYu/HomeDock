@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import type { Dashboard } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
-import { DEFAULT_DASHBOARD_CONFIG } from './dashboard.defaults';
+import {
+  DEFAULT_DASHBOARD_CONFIG,
+  DEFAULT_DASHBOARD_STORAGE
+} from './dashboard.defaults';
 
 type DashboardConfigInput = {
   brandName?: string;
+  language?: 'ko' | 'en' | 'ja' | 'zh';
+  serviceGridColumnsLg?: number;
   title?: string;
   description?: string;
   weatherMode?: 'auto' | 'manual';
@@ -49,7 +55,7 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getPublicDashboard() {
-    const config = await this.ensureDashboard();
+    const config = this.formatConfig(await this.ensureDashboard());
     const categories = await this.prisma.category.findMany({
       orderBy: { sortOrder: 'asc' },
       include: {
@@ -70,7 +76,7 @@ export class DashboardService {
   }
 
   async getAdminDashboard() {
-    const config = await this.ensureDashboard();
+    const config = this.formatConfig(await this.ensureDashboard());
     const categories = await this.prisma.category.findMany({
       orderBy: { sortOrder: 'asc' },
       include: {
@@ -102,16 +108,45 @@ export class DashboardService {
     }
 
     return this.prisma.dashboard.create({
-      data: DEFAULT_DASHBOARD_CONFIG
+      data: DEFAULT_DASHBOARD_STORAGE
     });
+  }
+
+  private formatConfig(dashboard: Dashboard) {
+    return {
+      ...dashboard,
+      systemSummaryOrder: parseOrder(
+        dashboard.systemSummaryOrder,
+        DEFAULT_DASHBOARD_CONFIG.systemSummaryOrder
+      ),
+      weatherMetaOrder: parseOrder(
+        dashboard.weatherMetaOrder,
+        DEFAULT_DASHBOARD_CONFIG.weatherMetaOrder
+      )
+    };
   }
 
   private async updateConfig(config: DashboardConfigInput) {
     const dashboard = await this.ensureDashboard();
+    const nextSystemSummary =
+      config.systemSummaryOrder ??
+      parseOrder(
+        dashboard.systemSummaryOrder,
+        DEFAULT_DASHBOARD_CONFIG.systemSummaryOrder
+      );
+    const nextWeatherMeta =
+      config.weatherMetaOrder ??
+      parseOrder(
+        dashboard.weatherMetaOrder,
+        DEFAULT_DASHBOARD_CONFIG.weatherMetaOrder
+      );
     return this.prisma.dashboard.update({
       where: { id: dashboard.id },
       data: {
         brandName: config.brandName ?? dashboard.brandName,
+        language: config.language ?? dashboard.language,
+        serviceGridColumnsLg:
+          config.serviceGridColumnsLg ?? dashboard.serviceGridColumnsLg,
         title: config.title ?? dashboard.title,
         description: config.description ?? dashboard.description,
         weatherMode: config.weatherMode ?? dashboard.weatherMode,
@@ -120,9 +155,14 @@ export class DashboardService {
         weatherCountry: config.weatherCountry ?? dashboard.weatherCountry,
         weatherLatitude: config.weatherLatitude ?? dashboard.weatherLatitude,
         weatherLongitude: config.weatherLongitude ?? dashboard.weatherLongitude,
-        systemSummaryOrder:
-          config.systemSummaryOrder ?? dashboard.systemSummaryOrder,
-        weatherMetaOrder: config.weatherMetaOrder ?? dashboard.weatherMetaOrder
+        systemSummaryOrder: serializeOrder(
+          nextSystemSummary,
+          DEFAULT_DASHBOARD_CONFIG.systemSummaryOrder
+        ),
+        weatherMetaOrder: serializeOrder(
+          nextWeatherMeta,
+          DEFAULT_DASHBOARD_CONFIG.weatherMetaOrder
+        )
       }
     });
   }
@@ -230,6 +270,28 @@ export class DashboardService {
       }
     }
   }
+}
+
+function parseOrder(value: unknown, fallback: string[]) {
+  if (Array.isArray(value)) {
+    return value.filter((item) => typeof item === 'string');
+  }
+  if (typeof value === 'string' && value.trim().length > 0) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item) => typeof item === 'string');
+      }
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
+function serializeOrder(value: string[] | null | undefined, fallback: string[]) {
+  const base = Array.isArray(value) && value.length > 0 ? value : fallback;
+  return JSON.stringify(base);
 }
 
 function normalizeTarget(target?: string | null) {

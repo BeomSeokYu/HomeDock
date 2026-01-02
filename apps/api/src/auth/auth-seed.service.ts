@@ -18,14 +18,14 @@ export class AuthSeedService implements OnModuleInit {
       return;
     }
 
-    const existing = await this.prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return;
-    }
-
     const passwordHash = await bcrypt.hash(password, 10);
-    await this.prisma.user.create({
-      data: {
+    await this.prisma.user.upsert({
+      where: { email },
+      update: {
+        passwordHash,
+        role: 'admin'
+      },
+      create: {
         email,
         passwordHash,
         role: 'admin'
