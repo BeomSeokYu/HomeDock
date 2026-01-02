@@ -403,6 +403,35 @@ body::after {
   overflow: hidden;
 }
 
+.service-card[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translate(-50%, 6px);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(8, 12, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: pre-line;
+  min-width: 180px;
+  max-width: 240px;
+  box-shadow: 0 14px 32px rgba(4, 8, 24, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.service-card:hover::after,
+.service-card:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 .service-card:hover {
   transform: translateY(-6px);
   border-color: var(--category-accent, var(--accent));
@@ -451,6 +480,27 @@ body::after {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.home-screen[data-columns='6'] .service-card {
+  padding: 12px;
+  gap: 8px;
+}
+
+.home-screen[data-columns='6'] .service-name {
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-screen[data-columns='6'] .service-url {
+  -webkit-line-clamp: 1;
+}
+
+.home-screen[data-columns='6'] .service-desc {
+  display: none;
 }
 
 .service-chip {
