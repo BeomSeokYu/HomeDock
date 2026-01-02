@@ -1,35 +1,55 @@
 # HomeDock
 
-HomeDock is a sleek home-server launcher that turns ports and subdomains into a clean, categorized dashboard.
-It ships as a Next.js + NestJS monorepo and runs well on Linux/ARM with Docker Compose.
-This repo uses pnpm workspaces.
+HomeDock is a sleek server launcher that turns ports and subdomains into a clean, categorized dashboard.
+It is a Next.js + NestJS monorepo with a SQLite-backed configuration, designed for Linux/ARM and Docker Compose.
+
+한국어 문서: `README.ko.md`
 
 ## Features
-- Category-driven service cards with icon, name, and URL/port
-- Auth-required access for external exposure
-- Database-backed configuration (SQLite by default)
-- Docker Compose deploy target + GitHub Actions CI
+- Public dashboard with category cards, square service tiles, and a favorites dock.
+- Admin-only settings modal for brand/title/description, layout columns, and categories/services.
+- Weather via Open-Meteo (IP auto-location + manual search), with configurable metadata rows.
+- System summary card with configurable fields and order.
+- Built-in i18n: Korean, English, Japanese, Chinese.
 
 ## Requirements
-- Node.js 18+ (Next 16 / Nest 11)
+- Node.js 18+
 - pnpm 9+ (via Corepack)
-- Docker (optional, for compose deployment)
+- Docker (optional, for Compose deployment)
 
 ## Quickstart (Docker)
-1. Copy `.env.example` to `.env` and set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `JWT_SECRET`.
-   - Set `WEB_ORIGIN` to your external domain if exposing publicly.
-   - Set `NEXT_PUBLIC_API_BASE_URL` to your public API URL (rebuild required if it changes).
-2. Build and run:
+1. Clone and enter the repo:
 
 ```bash
-docker compose up --build
+git clone https://github.com/BeomSeokYu/HomeDock.git
+cd HomeDock
 ```
 
-3. Open `http://localhost:3000`.
+2. Copy the environment template:
 
-## Local dev
 ```bash
+cp .env.example .env
+```
+
+3. Edit `.env` and set:
+   - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `JWT_SECRET`
+   - `WEB_ORIGIN` (CORS allowlist)
+   - `NEXT_PUBLIC_API_BASE_URL` (baked into the web build)
+   - Optional: `API_PORT`, `WEB_PORT` if you want custom ports
+
+4. Build and run:
+
+```bash
+docker compose up --build -d
+```
+
+5. Open `http://localhost:3000`.
+
+## Local Development
+```bash
+corepack enable
 pnpm install
+pnpm db:migrate
 pnpm dev
 ```
 
@@ -41,16 +61,16 @@ pnpm dev:api
 
 Default ports: web `:3000`, API `:4000`.
 
-## API
+## API Endpoints
 - `POST /api/auth/login` -> JWT access token
 - `GET /api/auth/me` -> current user
-- `GET /api/categories` -> categories with services (auth required)
-- `POST /api/categories` -> create category (auth required)
-- `GET /api/services` -> services (auth required)
-- `POST /api/services` -> create service (auth required)
+- `GET /api/dashboard` -> public dashboard data
+- `GET /api/dashboard/admin` -> admin dashboard data (auth)
+- `PUT /api/dashboard/admin` -> update config + categories (auth)
+- `GET /api/weather` -> current weather + daily data
+- `GET /api/weather/locations?query=...` -> location search
 
 ## Notes
-- SQLite is stored at `/data/homedock.db` inside the API container.
-- CORS uses `WEB_ORIGIN`. Set it for your external domain.
-- `NEXT_PUBLIC_API_BASE_URL` is baked into the web build. Rebuild the web image when changing domains.
-- Set a strong `JWT_SECRET` before exposing HomeDock publicly.
+- Docker Compose stores SQLite at `./homedock-data/homedock.db` on the host.
+- Admin credentials are synced from `.env` on API boot (email + password updates).
+- `NEXT_PUBLIC_API_BASE_URL` is baked into the web build; rebuild when it changes.

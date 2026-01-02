@@ -2,7 +2,7 @@
 set -e
 
 if [ -n "${DATABASE_URL}" ]; then
-  ./node_modules/.bin/prisma db push
+  ./apps/api/node_modules/.bin/prisma db push --schema=./prisma/schema.prisma
 fi
 
 exec node dist/main.js
