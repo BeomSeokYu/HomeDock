@@ -20,6 +20,11 @@ const defaultConfig = {
   brandName: 'HomeDock',
   language: 'ko',
   serviceGridColumnsLg: 4,
+  showBrand: true,
+  showTitle: true,
+  showDescription: true,
+  dockSeparatorEnabled: true,
+  themeKey: 'homedock',
   title: 'HomeDock 메인 대시보드',
   description:
     '홈서버에 숨겨진 모든 서비스를 하나의 런처로 정리하세요. 카테고리별 정렬, 포트/도메인 빠른 확인, 바로 실행까지 한 번에.',
@@ -59,6 +64,164 @@ const LOCALE_BY_LANGUAGE: Record<LanguageCode, string> = {
   zh: 'zh-CN'
 };
 
+const THEME_OPTIONS = [
+  {
+    key: 'homedock',
+    name: 'HomeDock',
+    colors: {
+      bgDeep: '#0b1020',
+      bgMid: '#111a33',
+      bgSoft: '#182746',
+      accent: '#7ef5d2',
+      accent2: '#ffb86b',
+      textPrimary: '#f6f7fb',
+      textMuted: 'rgba(255, 255, 255, 0.62)',
+      glass: 'rgba(255, 255, 255, 0.08)',
+      glassStrong: 'rgba(255, 255, 255, 0.14)',
+      stroke: 'rgba(255, 255, 255, 0.15)',
+      shadow: '0 20px 60px rgba(4, 8, 24, 0.45)'
+    }
+  },
+  {
+    key: 'nord',
+    name: 'Nord',
+    colors: {
+      bgDeep: '#2e3440',
+      bgMid: '#3b4252',
+      bgSoft: '#434c5e',
+      accent: '#88c0d0',
+      accent2: '#a3be8c',
+      textPrimary: '#eceff4',
+      textMuted: 'rgba(236, 239, 244, 0.7)',
+      glass: 'rgba(236, 239, 244, 0.08)',
+      glassStrong: 'rgba(236, 239, 244, 0.16)',
+      stroke: 'rgba(236, 239, 244, 0.12)',
+      shadow: '0 20px 60px rgba(14, 18, 32, 0.45)'
+    }
+  },
+  {
+    key: 'solarized',
+    name: 'Solarized',
+    colors: {
+      bgDeep: '#002b36',
+      bgMid: '#073642',
+      bgSoft: '#0f3d4a',
+      accent: '#2aa198',
+      accent2: '#b58900',
+      textPrimary: '#fdf6e3',
+      textMuted: 'rgba(253, 246, 227, 0.68)',
+      glass: 'rgba(253, 246, 227, 0.08)',
+      glassStrong: 'rgba(253, 246, 227, 0.16)',
+      stroke: 'rgba(253, 246, 227, 0.12)',
+      shadow: '0 20px 60px rgba(0, 14, 18, 0.45)'
+    }
+  },
+  {
+    key: 'gruvbox',
+    name: 'Gruvbox',
+    colors: {
+      bgDeep: '#1d2021',
+      bgMid: '#282828',
+      bgSoft: '#32302f',
+      accent: '#fabd2f',
+      accent2: '#b8bb26',
+      textPrimary: '#fbf1c7',
+      textMuted: 'rgba(251, 241, 199, 0.65)',
+      glass: 'rgba(251, 241, 199, 0.08)',
+      glassStrong: 'rgba(251, 241, 199, 0.16)',
+      stroke: 'rgba(251, 241, 199, 0.12)',
+      shadow: '0 20px 60px rgba(8, 8, 8, 0.45)'
+    }
+  },
+  {
+    key: 'tokyo-night',
+    name: 'Tokyo Night',
+    colors: {
+      bgDeep: '#1a1b26',
+      bgMid: '#24283b',
+      bgSoft: '#2a2e4a',
+      accent: '#7aa2f7',
+      accent2: '#e0af68',
+      textPrimary: '#c0caf5',
+      textMuted: 'rgba(192, 202, 245, 0.65)',
+      glass: 'rgba(192, 202, 245, 0.08)',
+      glassStrong: 'rgba(192, 202, 245, 0.16)',
+      stroke: 'rgba(192, 202, 245, 0.12)',
+      shadow: '0 20px 60px rgba(7, 9, 24, 0.45)'
+    }
+  },
+  {
+    key: 'everforest',
+    name: 'Everforest',
+    colors: {
+      bgDeep: '#2b3339',
+      bgMid: '#323c41',
+      bgSoft: '#3a454a',
+      accent: '#a7c080',
+      accent2: '#e69875',
+      textPrimary: '#d3c6aa',
+      textMuted: 'rgba(211, 198, 170, 0.65)',
+      glass: 'rgba(211, 198, 170, 0.08)',
+      glassStrong: 'rgba(211, 198, 170, 0.16)',
+      stroke: 'rgba(211, 198, 170, 0.12)',
+      shadow: '0 20px 60px rgba(12, 16, 18, 0.45)'
+    }
+  },
+  {
+    key: 'oceanic',
+    name: 'Oceanic',
+    colors: {
+      bgDeep: '#0b1f2a',
+      bgMid: '#11283a',
+      bgSoft: '#15344a',
+      accent: '#5fb3b3',
+      accent2: '#f99157',
+      textPrimary: '#d8dee9',
+      textMuted: 'rgba(216, 222, 233, 0.65)',
+      glass: 'rgba(216, 222, 233, 0.08)',
+      glassStrong: 'rgba(216, 222, 233, 0.16)',
+      stroke: 'rgba(216, 222, 233, 0.12)',
+      shadow: '0 20px 60px rgba(5, 10, 20, 0.45)'
+    }
+  },
+  {
+    key: 'sunset',
+    name: 'Sunset',
+    colors: {
+      bgDeep: '#1a1424',
+      bgMid: '#251a36',
+      bgSoft: '#2e2046',
+      accent: '#ff9f7f',
+      accent2: '#ffd166',
+      textPrimary: '#f7e9d7',
+      textMuted: 'rgba(247, 233, 215, 0.65)',
+      glass: 'rgba(247, 233, 215, 0.08)',
+      glassStrong: 'rgba(247, 233, 215, 0.16)',
+      stroke: 'rgba(247, 233, 215, 0.12)',
+      shadow: '0 20px 60px rgba(10, 6, 18, 0.45)'
+    }
+  },
+  {
+    key: 'graphite',
+    name: 'Graphite',
+    colors: {
+      bgDeep: '#121212',
+      bgMid: '#1a1a1a',
+      bgSoft: '#242424',
+      accent: '#8fbcbb',
+      accent2: '#b0b0b0',
+      textPrimary: '#e6e6e6',
+      textMuted: 'rgba(230, 230, 230, 0.6)',
+      glass: 'rgba(230, 230, 230, 0.08)',
+      glassStrong: 'rgba(230, 230, 230, 0.16)',
+      stroke: 'rgba(230, 230, 230, 0.12)',
+      shadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+    }
+  }
+] as const;
+
+const THEME_KEYS: string[] = THEME_OPTIONS.map((theme) => theme.key);
+
 const TRANSLATIONS = {
   ko: {
     lockSwipe: '위로 밀어 잠금 해제',
@@ -85,11 +248,19 @@ const TRANSLATIONS = {
     brandLabel: '헤더 브랜드',
     dashboardTitleLabel: '대시보드 타이틀',
     dashboardDescLabel: '한 줄 설명',
+    mainInfoVisibility: '메인 정보 표시',
+    showBrandLabel: '헤더 브랜드 표시',
+    showTitleLabel: '대시보드 타이틀 표시',
+    showDescriptionLabel: '한 줄 설명 표시',
     layoutTitle: '레이아웃',
     languageLabel: '언어',
     languageHelp: '화면 표시 언어',
     layoutColumnsLabel: '큰 화면(데스크톱) 열 수',
     layoutColumnsHelp: '카테고리 카드의 서비스 그리드 기준',
+    dockSeparatorLabel: 'Dock 구분선 표시',
+    dockSeparatorHelp: '카테고리 사이에 구분선을 표시합니다.',
+    themeTitle: '테마',
+    themeHelp: '브라우저에 저장되어 자동 적용됩니다.',
     systemSummaryTitle: '시스템 요약 카드',
     systemSummaryHelp: '최대 {count}개 선택',
     systemSummaryEmpty: '표시할 항목을 추가해 주세요.',
@@ -109,6 +280,7 @@ const TRANSLATIONS = {
     searchTitle: '빠른 검색',
     searchPlaceholder: '서비스 검색...',
     serviceCount: '{count}개 서비스',
+    dockMore: '더보기',
     systemSummaryCard: '시스템 요약',
     weatherCard: '오늘의 날씨',
     iconName: '아이콘 이름',
@@ -191,11 +363,19 @@ const TRANSLATIONS = {
     brandLabel: 'Header brand',
     dashboardTitleLabel: 'Dashboard title',
     dashboardDescLabel: 'Tagline',
+    mainInfoVisibility: 'Main info visibility',
+    showBrandLabel: 'Show header brand',
+    showTitleLabel: 'Show dashboard title',
+    showDescriptionLabel: 'Show tagline',
     layoutTitle: 'Layout',
     languageLabel: 'Language',
     languageHelp: 'UI language',
     layoutColumnsLabel: 'Columns on large screens',
     layoutColumnsHelp: 'Service grid in category cards',
+    dockSeparatorLabel: 'Show dock separators',
+    dockSeparatorHelp: 'Show dividers between categories.',
+    themeTitle: 'Theme',
+    themeHelp: 'Saved in your browser and applied automatically.',
     systemSummaryTitle: 'System summary',
     systemSummaryHelp: 'Select up to {count}',
     systemSummaryEmpty: 'Add items to display.',
@@ -215,6 +395,7 @@ const TRANSLATIONS = {
     searchTitle: 'Quick search',
     searchPlaceholder: 'Search services...',
     serviceCount: '{count} services',
+    dockMore: 'More',
     systemSummaryCard: 'System summary',
     weatherCard: 'Today’s weather',
     iconName: 'Icon name',
@@ -297,11 +478,19 @@ const TRANSLATIONS = {
     brandLabel: 'ヘッダーブランド',
     dashboardTitleLabel: 'ダッシュボードタイトル',
     dashboardDescLabel: '説明文',
+    mainInfoVisibility: 'メイン情報の表示',
+    showBrandLabel: 'ヘッダーブランドを表示',
+    showTitleLabel: 'ダッシュボードタイトルを表示',
+    showDescriptionLabel: '説明文を表示',
     layoutTitle: 'レイアウト',
     languageLabel: '言語',
     languageHelp: '表示言語',
     layoutColumnsLabel: '大画面の列数',
     layoutColumnsHelp: 'カテゴリカード内のサービス数',
+    dockSeparatorLabel: 'Dockの区切りを表示',
+    dockSeparatorHelp: 'カテゴリ間に区切り線を表示します。',
+    themeTitle: 'テーマ',
+    themeHelp: 'ブラウザに保存され自動適用されます。',
     systemSummaryTitle: 'システム要約',
     systemSummaryHelp: '最大{count}件',
     systemSummaryEmpty: '表示項目を追加してください。',
@@ -321,6 +510,7 @@ const TRANSLATIONS = {
     searchTitle: 'クイック検索',
     searchPlaceholder: 'サービス検索...',
     serviceCount: '{count}件のサービス',
+    dockMore: 'さらに表示',
     systemSummaryCard: 'システム要約',
     weatherCard: '今日の天気',
     iconName: 'アイコン名',
@@ -402,11 +592,19 @@ const TRANSLATIONS = {
     brandLabel: '页眉品牌',
     dashboardTitleLabel: '仪表盘标题',
     dashboardDescLabel: '一句话说明',
+    mainInfoVisibility: '主信息显示',
+    showBrandLabel: '显示页眉品牌',
+    showTitleLabel: '显示仪表盘标题',
+    showDescriptionLabel: '显示一句话说明',
     layoutTitle: '布局',
     languageLabel: '语言',
     languageHelp: '界面语言',
     layoutColumnsLabel: '大屏列数',
     layoutColumnsHelp: '分类卡片内服务列数',
+    dockSeparatorLabel: '显示 Dock 分隔线',
+    dockSeparatorHelp: '在分类之间显示分隔线。',
+    themeTitle: '主题',
+    themeHelp: '保存在浏览器并自动应用。',
     systemSummaryTitle: '系统摘要',
     systemSummaryHelp: '最多选择{count}项',
     systemSummaryEmpty: '请添加要显示的项。',
@@ -426,6 +624,7 @@ const TRANSLATIONS = {
     searchTitle: '快速搜索',
     searchPlaceholder: '搜索服务...',
     serviceCount: '{count} 个服务',
+    dockMore: '更多',
     systemSummaryCard: '系统摘要',
     weatherCard: '今日天气',
     iconName: '图标名称',
@@ -526,6 +725,11 @@ const IDLE_LOCK_TIMEOUT_MS = 60000;
 type CategoryWithTone = Category & {
   tone: { accent: string; glow: string };
   services: Service[];
+};
+
+type DockService = Service & {
+  dockCategoryId: string;
+  dockCategoryName: string;
 };
 
 type WeatherState = {
@@ -910,6 +1114,27 @@ function translate(
   return result;
 }
 
+function resolveTheme(key?: string) {
+  const fallback = THEME_OPTIONS[0];
+  if (!key) return fallback;
+  return THEME_OPTIONS.find((theme) => theme.key === key) ?? fallback;
+}
+
+function applyTheme(theme: (typeof THEME_OPTIONS)[number]) {
+  const root = document.documentElement;
+  root.style.setProperty('--bg-deep', theme.colors.bgDeep);
+  root.style.setProperty('--bg-mid', theme.colors.bgMid);
+  root.style.setProperty('--bg-soft', theme.colors.bgSoft);
+  root.style.setProperty('--accent', theme.colors.accent);
+  root.style.setProperty('--accent-2', theme.colors.accent2);
+  root.style.setProperty('--text-primary', theme.colors.textPrimary);
+  root.style.setProperty('--text-muted', theme.colors.textMuted);
+  root.style.setProperty('--glass', theme.colors.glass);
+  root.style.setProperty('--glass-strong', theme.colors.glassStrong);
+  root.style.setProperty('--stroke', theme.colors.stroke);
+  root.style.setProperty('--shadow', theme.colors.shadow);
+}
+
 function normalizeOrder(
   order: string[] | null | undefined,
   defaults: readonly string[],
@@ -933,6 +1158,21 @@ function normalizeConfig(input: DashboardConfig) {
   if (!GRID_COLUMN_OPTIONS.includes(next.serviceGridColumnsLg as 4 | 5 | 6)) {
     next.serviceGridColumnsLg = defaultConfig.serviceGridColumnsLg;
   }
+  if (!THEME_KEYS.includes(next.themeKey ?? '')) {
+    next.themeKey = defaultConfig.themeKey;
+  }
+  if (typeof next.showBrand !== 'boolean') {
+    next.showBrand = defaultConfig.showBrand;
+  }
+  if (typeof next.showTitle !== 'boolean') {
+    next.showTitle = defaultConfig.showTitle;
+  }
+  if (typeof next.showDescription !== 'boolean') {
+    next.showDescription = defaultConfig.showDescription;
+  }
+  if (typeof next.dockSeparatorEnabled !== 'boolean') {
+    next.dockSeparatorEnabled = defaultConfig.dockSeparatorEnabled;
+  }
   if (
     !Array.isArray(next.systemSummaryOrder) ||
     next.systemSummaryOrder.length === 0
@@ -943,6 +1183,15 @@ function normalizeConfig(input: DashboardConfig) {
     next.weatherMetaOrder = [...defaultConfig.weatherMetaOrder];
   }
   return next;
+}
+
+function applyStoredTheme(nextConfig: DashboardConfig) {
+  if (typeof window === 'undefined') return nextConfig;
+  const storedTheme = window.localStorage.getItem('homedock_theme');
+  if (storedTheme && THEME_KEYS.includes(storedTheme)) {
+    return { ...nextConfig, themeKey: storedTheme };
+  }
+  return nextConfig;
 }
 
 function createId() {
@@ -957,55 +1206,25 @@ function ServiceIcon({ service, size = 28 }: { service: Service; size?: number }
   const namedIcon = service.icon?.trim();
   const autoUrl =
     !explicitUrl && !namedIcon ? buildAutoIconUrl(service.url) : null;
-  const [explicitStatus, setExplicitStatus] = useState<
-    'idle' | 'pending' | 'ready' | 'error'
-  >('idle');
-  const [autoStatus, setAutoStatus] = useState<
-    'idle' | 'pending' | 'ready' | 'error'
-  >('idle');
+  const [explicitError, setExplicitError] = useState(false);
+  const [autoError, setAutoError] = useState(false);
 
   useEffect(() => {
-    if (explicitUrl) {
-      setExplicitStatus('pending');
-      return;
-    }
-    setExplicitStatus('idle');
+    setExplicitError(false);
   }, [explicitUrl]);
 
   useEffect(() => {
-    if (autoUrl) {
-      setAutoStatus('pending');
-      return;
-    }
-    setAutoStatus('idle');
+    setAutoError(false);
   }, [autoUrl]);
 
-  useEffect(() => {
-    if (!explicitUrl) return;
-    const handle = window.setTimeout(() => {
-      setExplicitStatus((prev) => (prev === 'ready' ? prev : 'error'));
-    }, 1500);
-    return () => window.clearTimeout(handle);
-  }, [explicitUrl]);
-
-  useEffect(() => {
-    if (!autoUrl) return;
-    const handle = window.setTimeout(() => {
-      setAutoStatus((prev) => (prev === 'ready' ? prev : 'error'));
-    }, 1500);
-    return () => window.clearTimeout(handle);
-  }, [autoUrl]);
-
-  if (explicitUrl && explicitStatus !== 'error') {
+  if (explicitUrl && !explicitError) {
     return (
       <img
         src={explicitUrl}
         alt=""
         width={size}
         height={size}
-        onLoad={() => setExplicitStatus('ready')}
-        onError={() => setExplicitStatus('error')}
-        style={{ opacity: explicitStatus === 'ready' ? 1 : 0.85 }}
+        onError={() => setExplicitError(true)}
       />
     );
   }
@@ -1014,16 +1233,14 @@ function ServiceIcon({ service, size = 28 }: { service: Service; size?: number }
     return <AppIcon name={namedIcon} size={size} />;
   }
 
-  if (autoUrl && autoStatus !== 'error') {
+  if (autoUrl && !autoError) {
     return (
       <img
         src={autoUrl}
         alt=""
         width={size}
         height={size}
-        onLoad={() => setAutoStatus('ready')}
-        onError={() => setAutoStatus('error')}
-        style={{ opacity: autoStatus === 'ready' ? 1 : 0.85 }}
+        onError={() => setAutoError(true)}
       />
     );
   }
@@ -1141,13 +1358,21 @@ export default function HomePage() {
   const [locationQuery, setLocationQuery] = useState('');
   const [locationOptions, setLocationOptions] = useState<LocationOption[]>([]);
   const [saving, setSaving] = useState(false);
+  const [dockVisibleCount, setDockVisibleCount] = useState(3);
+  const [dockMenuOpen, setDockMenuOpen] = useState(false);
   const lockRef = useRef<HTMLDivElement | null>(null);
+  const dockMenuRef = useRef<HTMLDivElement | null>(null);
+  const dockMoreRef = useRef<HTMLButtonElement | null>(null);
   const dragState = useRef({ active: false, startY: 0, delta: 0 });
   const idleTimer = useRef<number | null>(null);
 
   const activeLanguage =
     settingsOpen && draftConfig ? draftConfig.language : config.language;
   const language = activeLanguage ?? defaultConfig.language;
+  const activeThemeKey =
+    settingsOpen && draftConfig ? draftConfig.themeKey : config.themeKey;
+  const themeKey = activeThemeKey ?? defaultConfig.themeKey;
+  const theme = resolveTheme(themeKey);
   const locale = LOCALE_BY_LANGUAGE[language] ?? LOCALE_BY_LANGUAGE.ko;
   const timeLabel = useMemo(
     () => (now ? formatTime(now, locale) : '--:--'),
@@ -1172,6 +1397,11 @@ export default function HomePage() {
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+
+  useEffect(() => {
+    applyTheme(theme);
+    window.localStorage.setItem('homedock_theme', theme.key);
+  }, [theme]);
 
   useEffect(() => {
     if (!unlocked) {
@@ -1218,6 +1448,34 @@ export default function HomePage() {
     const stored = window.localStorage.getItem('homedock_token');
     setToken(stored);
   }, []);
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem('homedock_theme');
+    if (storedTheme && THEME_KEYS.includes(storedTheme)) {
+      setConfig((prev) => ({ ...prev, themeKey: storedTheme }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!dockMenuOpen) return;
+    const handleOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (
+        dockMenuRef.current?.contains(target) ||
+        dockMoreRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setDockMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+    };
+  }, [dockMenuOpen]);
 
   useEffect(() => {
     if (token) {
@@ -1356,7 +1614,9 @@ export default function HomePage() {
         categories?: Category[];
       };
 
-      const nextConfig = normalizeConfig(data.config ?? defaultConfig);
+      const nextConfig = applyStoredTheme(
+        normalizeConfig(data.config ?? defaultConfig)
+      );
       setConfig(nextConfig);
       setCategories(data.categories?.length ? data.categories : fallbackCategories);
     } catch {
@@ -1384,7 +1644,7 @@ export default function HomePage() {
         categories?: Category[];
       };
 
-      const nextConfig = normalizeConfig(data.config ?? config);
+      const nextConfig = applyStoredTheme(normalizeConfig(data.config ?? config));
       setDraftConfig(nextConfig);
       setDraftCategories(data.categories ?? categories);
       setLocationQuery(nextConfig.weatherName ?? '');
@@ -1395,37 +1655,68 @@ export default function HomePage() {
     }
   };
 
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+  const startDrag = (clientY: number) => {
     dragState.current.active = true;
-    dragState.current.startY = event.clientY;
+    dragState.current.startY = clientY;
     dragState.current.delta = 0;
-    lockRef.current?.setPointerCapture(event.pointerId);
     if (lockRef.current) {
       lockRef.current.style.transition = 'none';
     }
   };
 
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+  const moveDrag = (clientY: number) => {
     if (!dragState.current.active || !lockRef.current) return;
-    const delta = dragState.current.startY - event.clientY;
+    const delta = dragState.current.startY - clientY;
     if (delta < 0) return;
     dragState.current.delta = delta;
     lockRef.current.style.transform = `translateY(-${delta}px)`;
   };
 
-  const handlePointerUp = () => {
+  const endDrag = () => {
     if (!dragState.current.active || !lockRef.current) return;
     dragState.current.active = false;
     const { delta } = dragState.current;
     lockRef.current.style.transition = 'transform 0.5s ease';
 
-    if (delta > 120) {
+    const threshold = Math.min(120, window.innerHeight * 0.12);
+    if (delta > threshold) {
       setUnlocked(true);
       lockRef.current.style.transform = '';
       return;
     }
 
     lockRef.current.style.transform = 'translateY(0)';
+  };
+
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    lockRef.current?.setPointerCapture(event.pointerId);
+    startDrag(event.clientY);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    moveDrag(event.clientY);
+  };
+
+  const handlePointerUp = () => {
+    endDrag();
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    startDrag(touch.clientY);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    moveDrag(touch.clientY);
+  };
+
+  const handleTouchEnd = () => {
+    endDrag();
   };
 
   const tonedCategories = useMemo(() => withTones(categories), [categories]);
@@ -1457,17 +1748,129 @@ export default function HomePage() {
       .filter((category) => category.services.length > 0);
   }, [query, tonedCategories, token]);
 
-  const allFavorites = useMemo(() => {
-    const items = categories.flatMap((category) => category.services ?? []);
-    return items
-      .filter((service) => service.isFavorite)
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  const showBrand = config.showBrand ?? defaultConfig.showBrand;
+  const showTitle = config.showTitle ?? defaultConfig.showTitle;
+  const showDescription = config.showDescription ?? defaultConfig.showDescription;
+  const dockSeparatorEnabled =
+    config.dockSeparatorEnabled ?? defaultConfig.dockSeparatorEnabled;
+
+  const allFavorites = useMemo<DockService[]>(() => {
+    return [...categories]
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      .flatMap((category) =>
+        (category.services ?? [])
+          .filter((service) => service.isFavorite)
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          .map((service) => ({
+            ...service,
+            dockCategoryId: category.id,
+            dockCategoryName: category.name
+          }))
+      );
   }, [categories]);
 
-  const dockFavorites = useMemo(
-    () => allFavorites.slice(0, 3),
-    [allFavorites]
+  const dockVisibleFavorites = useMemo(
+    () => allFavorites.slice(0, dockVisibleCount),
+    [allFavorites, dockVisibleCount]
   );
+
+  const dockHiddenFavorites = useMemo(
+    () => allFavorites.slice(dockVisibleCount),
+    [allFavorites, dockVisibleCount]
+  );
+
+  const dockEntries = useMemo(() => {
+    if (!dockSeparatorEnabled) {
+      return dockVisibleFavorites.map((service) => ({
+        type: 'item' as const,
+        service
+      }));
+    }
+
+    const entries: Array<
+      | { type: 'item'; service: DockService }
+      | { type: 'separator'; id: string }
+    > = [];
+    let prevCategory: string | null = null;
+    dockVisibleFavorites.forEach((service, index) => {
+      if (
+        prevCategory &&
+        prevCategory !== service.dockCategoryId
+      ) {
+        entries.push({
+          type: 'separator',
+          id: `${service.dockCategoryId}-${index}`
+        });
+      }
+      entries.push({ type: 'item', service });
+      prevCategory = service.dockCategoryId;
+    });
+    return entries;
+  }, [dockVisibleFavorites, dockSeparatorEnabled]);
+
+  useEffect(() => {
+    const updateDockCapacity = () => {
+      const viewportWidth = window.innerWidth;
+      const availableWidth = Math.max(0, viewportWidth - 48);
+      const totalFavorites = allFavorites.length;
+      const itemSize = 46;
+      const separatorSize = 10;
+      const gap = 20;
+      const paddingX = 20;
+      const reservedWidths = (includeMore: boolean) => [
+        ...(includeMore ? [itemSize] : []),
+        itemSize
+      ];
+
+      const computeVisibleCount = (includeMore: boolean) => {
+        const reserved = reservedWidths(includeMore);
+        const reservedWidth = reserved.reduce((sum, width) => sum + width, 0);
+        const reservedCount = reserved.length;
+        let widthSum = 0;
+        let elementCount = 0;
+        let visibleCount = 0;
+        let prevCategory: string | null = null;
+
+        for (const favorite of allFavorites) {
+          const needsSeparator =
+            dockSeparatorEnabled &&
+            prevCategory &&
+            prevCategory !== favorite.dockCategoryId;
+          const candidateCount = needsSeparator ? 2 : 1;
+          const candidateWidth = itemSize + (needsSeparator ? separatorSize : 0);
+          const totalElements = elementCount + candidateCount + reservedCount;
+          const totalWidth =
+            widthSum + candidateWidth + reservedWidth + gap * (totalElements - 1);
+
+          if (totalWidth > availableWidth) {
+            break;
+          }
+
+          widthSum += candidateWidth;
+          elementCount += candidateCount;
+          visibleCount += 1;
+          prevCategory = favorite.dockCategoryId;
+        }
+
+        return visibleCount;
+      };
+
+      const visibleWithMore = computeVisibleCount(true);
+      const needsMore = visibleWithMore < totalFavorites;
+      const nextVisible = needsMore
+        ? visibleWithMore
+        : computeVisibleCount(false);
+
+      setDockVisibleCount(nextVisible);
+      if (!needsMore) {
+        setDockMenuOpen(false);
+      }
+    };
+
+    updateDockCapacity();
+    window.addEventListener('resize', updateDockCapacity);
+    return () => window.removeEventListener('resize', updateDockCapacity);
+  }, [allFavorites, dockSeparatorEnabled]);
 
   const systemSummaryOrder = useMemo(
     () =>
@@ -1490,7 +1893,6 @@ export default function HomePage() {
       ),
     [config.weatherMetaOrder]
   );
-
   const authStatusLabel = token ? t('loginActive') : t('loginInactive');
 
   const systemSummaryValues = useMemo<Record<SystemSummaryKey, string>>(
@@ -1798,6 +2200,11 @@ export default function HomePage() {
             serviceGridColumnsLg: draftConfig.serviceGridColumnsLg,
             title: draftConfig.title,
             description: draftConfig.description,
+            showBrand: draftConfig.showBrand,
+            showTitle: draftConfig.showTitle,
+            showDescription: draftConfig.showDescription,
+            dockSeparatorEnabled: draftConfig.dockSeparatorEnabled,
+            themeKey: draftConfig.themeKey,
             weatherMode: draftConfig.weatherMode,
             weatherName: draftConfig.weatherName,
             weatherRegion: draftConfig.weatherRegion,
@@ -1820,9 +2227,12 @@ export default function HomePage() {
         categories?: Category[];
       };
 
-      setConfig(data.config ?? draftConfig);
-      setCategories(data.categories ?? normalizedCategories);
-      setSettingsOpen(false);
+      const nextConfig = data.config ?? draftConfig;
+      const nextCategories = data.categories ?? normalizedCategories;
+      setConfig(nextConfig);
+      setCategories(nextCategories);
+      setDraftConfig(nextConfig);
+      setDraftCategories(nextCategories);
     } catch {
       setLoginError(t('errorSaveFailed'));
     } finally {
@@ -1862,6 +2272,10 @@ export default function HomePage() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         <div className="status-bar">
           <div className="status-left">
@@ -1890,14 +2304,18 @@ export default function HomePage() {
           <div className="status-bar">
             <div className="status-left">{timeLabel}</div>
             <div className="status-right">
-              <span className="pill">{config.brandName}</span>
+              {showBrand ? (
+                <span className="pill">{config.brandName}</span>
+              ) : null}
             </div>
           </div>
 
-          <section className="hero">
-            <h1>{config.title}</h1>
-            <p>{config.description}</p>
-          </section>
+          {showTitle || showDescription ? (
+            <section className="hero">
+              {showTitle ? <h1>{config.title}</h1> : null}
+              {showDescription ? <p>{config.description}</p> : null}
+            </section>
+          ) : null}
 
           <section className="overview-grid">
             <div className="glass-card">
@@ -2029,20 +2447,54 @@ export default function HomePage() {
         </div>
 
         <div className="dock">
-          {dockFavorites.map((service) => (
-            <a
-              key={service.id}
-              className="dock-item"
-              href={service.url}
-              target={service.target === '_self' ? '_self' : '_blank'}
-              rel={service.target === '_self' ? undefined : 'noreferrer'}
+          {dockEntries.map((entry) =>
+            entry.type === 'separator' ? (
+              <span key={entry.id} className="dock-separator" aria-hidden="true" />
+            ) : (
+              <a
+                key={entry.service.id}
+                className="dock-item"
+                href={entry.service.url}
+                target={entry.service.target === '_self' ? '_self' : '_blank'}
+                rel={
+                  entry.service.target === '_self' ? undefined : 'noreferrer'
+                }
+              >
+                <ServiceIcon service={entry.service} size={22} />
+              </a>
+            )
+          )}
+          {dockHiddenFavorites.length > 0 ? (
+            <button
+              ref={dockMoreRef}
+              type="button"
+              className="dock-item dock-more"
+              onClick={() => setDockMenuOpen((prev) => !prev)}
+              aria-label={t('dockMore')}
+              title={t('dockMore')}
             >
-              <ServiceIcon service={service} size={22} />
-            </a>
-          ))}
+              …
+            </button>
+          ) : null}
           <button type="button" className="dock-item" onClick={openSettings}>
             <AppIcon name="settings" size={22} />
           </button>
+          {dockHiddenFavorites.length > 0 && dockMenuOpen ? (
+            <div className="dock-menu" ref={dockMenuRef}>
+              {dockHiddenFavorites.map((service) => (
+                <a
+                  key={service.id}
+                  className="dock-menu-item"
+                  href={service.url}
+                  target={service.target === '_self' ? '_self' : '_blank'}
+                  rel={service.target === '_self' ? undefined : 'noreferrer'}
+                >
+                  <ServiceIcon service={service} size={20} />
+                  <span>{service.name}</span>
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </main>
 
@@ -2144,6 +2596,60 @@ export default function HomePage() {
                       />
                     </div>
                   </div>
+                  <div className="settings-row">
+                    <label className="checkbox-pill">
+                      <input
+                        type="checkbox"
+                        checked={
+                          draftConfig.showBrand ?? defaultConfig.showBrand
+                        }
+                        onChange={(event) =>
+                          setDraftConfig((prev) =>
+                            prev
+                              ? { ...prev, showBrand: event.target.checked }
+                              : prev
+                          )
+                        }
+                      />
+                      {t('showBrandLabel')}
+                    </label>
+                    <label className="checkbox-pill">
+                      <input
+                        type="checkbox"
+                        checked={
+                          draftConfig.showTitle ?? defaultConfig.showTitle
+                        }
+                        onChange={(event) =>
+                          setDraftConfig((prev) =>
+                            prev
+                              ? { ...prev, showTitle: event.target.checked }
+                              : prev
+                          )
+                        }
+                      />
+                      {t('showTitleLabel')}
+                    </label>
+                    <label className="checkbox-pill">
+                      <input
+                        type="checkbox"
+                        checked={
+                          draftConfig.showDescription ??
+                          defaultConfig.showDescription
+                        }
+                        onChange={(event) =>
+                          setDraftConfig((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  showDescription: event.target.checked
+                                }
+                              : prev
+                          )
+                        }
+                      />
+                      {t('showDescriptionLabel')}
+                    </label>
+                  </div>
                 </section>
 
                 <section className="settings-section">
@@ -2195,6 +2701,88 @@ export default function HomePage() {
                       </select>
                       <span className="helper-text">{t('layoutColumnsHelp')}</span>
                     </div>
+                  </div>
+                  <div className="settings-row">
+                    <label className="checkbox-pill">
+                      <input
+                        type="checkbox"
+                        checked={
+                          draftConfig.dockSeparatorEnabled ??
+                          defaultConfig.dockSeparatorEnabled
+                        }
+                        onChange={(event) =>
+                          setDraftConfig((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  dockSeparatorEnabled: event.target.checked
+                                }
+                              : prev
+                          )
+                        }
+                      />
+                      {t('dockSeparatorLabel')}
+                    </label>
+                    <span className="helper-text">{t('dockSeparatorHelp')}</span>
+                  </div>
+                </section>
+
+                <section className="settings-section">
+                  <div className="section-header">
+                    <h3>{t('themeTitle')}</h3>
+                    <span className="helper-text">{t('themeHelp')}</span>
+                  </div>
+                  <div className="theme-grid">
+                    {THEME_OPTIONS.map((themeOption) => (
+                      <button
+                        key={themeOption.key}
+                        type="button"
+                        className={`theme-card ${
+                          (draftConfig.themeKey ?? defaultConfig.themeKey) ===
+                          themeOption.key
+                            ? 'active'
+                            : ''
+                        }`}
+                        style={{
+                          background: `linear-gradient(135deg, ${themeOption.colors.bgDeep}, ${themeOption.colors.bgSoft})`
+                        }}
+                        onClick={() =>
+                          setDraftConfig((prev) =>
+                            prev
+                              ? { ...prev, themeKey: themeOption.key }
+                              : prev
+                          )
+                        }
+                      >
+                        <div className="theme-swatches">
+                          <span
+                            className="theme-dot"
+                            style={{
+                              background: themeOption.colors.bgDeep
+                            }}
+                          />
+                          <span
+                            className="theme-dot"
+                            style={{
+                              background: themeOption.colors.bgSoft
+                            }}
+                          />
+                          <span
+                            className="theme-dot"
+                            style={{
+                              background: themeOption.colors.accent
+                            }}
+                          />
+                          <span
+                            className="theme-dot"
+                            style={{
+                              background: themeOption.colors.accent2
+                            }}
+                          />
+                        </div>
+                        <div className="theme-name">{themeOption.name}</div>
+                      </button>
+                    ))}
                   </div>
                 </section>
 
