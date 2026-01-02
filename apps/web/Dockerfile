@@ -1,7 +1,9 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 COPY . .
 RUN node -e "const fs=require('fs');const webPath='apps/web/package.json';const web=JSON.parse(fs.readFileSync(webPath,'utf8'));const sections=['dependencies','devDependencies','peerDependencies','optionalDependencies'];for(const section of sections){if(web[section]&&typeof web[section]['@homedock/types']==='string'&&web[section]['@homedock/types'].startsWith('workspace:')){web[section]['@homedock/types']='file:../packages/types';}}fs.writeFileSync(webPath,JSON.stringify(web,null,2));"
 RUN rm -rf apps/web/node_modules node_modules
