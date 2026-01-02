@@ -21,5 +21,6 @@ COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./package.json
 COPY --from=builder /app/apps/api/prisma ./prisma
 COPY --from=builder /app/apps/api/entrypoint.sh ./entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 EXPOSE 4000
-CMD ["./entrypoint.sh"]
+CMD ["sh", "/app/entrypoint.sh"]
