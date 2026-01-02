@@ -15,9 +15,11 @@ const categoryTones = [
   { accent: '#ff8bcf', glow: 'rgba(255, 139, 207, 0.35)' }
 ];
 
-const defaultConfig: DashboardConfig = {
+const defaultConfig = {
   id: 'default',
   brandName: 'HomeDock',
+  language: 'ko',
+  serviceGridColumnsLg: 4,
   title: 'HomeDock 메인 대시보드',
   description:
     '홈서버에 숨겨진 모든 서비스를 하나의 런처로 정리하세요. 카테고리별 정렬, 포트/도메인 빠른 확인, 바로 실행까지 한 번에.',
@@ -35,33 +37,478 @@ const defaultConfig: DashboardConfig = {
     'uvIndex',
     'windSpeed'
   ]
-};
+} satisfies DashboardConfig;
 
 const SYSTEM_SUMMARY_MAX = 4;
 const WEATHER_META_MAX = 5;
 
+const GRID_COLUMN_OPTIONS = [4, 5, 6] as const;
+const LANGUAGE_OPTIONS = [
+  { code: 'ko', label: '한국어' },
+  { code: 'en', label: 'English' },
+  { code: 'ja', label: '日本語' },
+  { code: 'zh', label: '中文' }
+] as const;
+
+type LanguageCode = (typeof LANGUAGE_OPTIONS)[number]['code'];
+
+const LOCALE_BY_LANGUAGE: Record<LanguageCode, string> = {
+  ko: 'ko-KR',
+  en: 'en-US',
+  ja: 'ja-JP',
+  zh: 'zh-CN'
+};
+
+const TRANSLATIONS = {
+  ko: {
+    lockSwipe: '위로 밀어 잠금 해제',
+    loginActive: '로그인 유지 중',
+    loginInactive: '비로그인',
+    settingsKicker: 'Dashboard Settings',
+    settingsTitle: '대시보드 구성 변경',
+    settingsSubtitle:
+      '메인 페이지는 로그인 없이 공개되고, 구성 변경은 로그인 후 가능합니다.',
+    loginEmail: '관리자 이메일',
+    loginPassword: '관리자 비밀번호',
+    loginButton: '로그인 후 편집',
+    close: '닫기',
+    loadingSettings: '설정을 불러오는 중...',
+    errorSessionExpired: '세션이 만료되었습니다. 다시 로그인하세요.',
+    errorInvalidCredentials: '이메일 또는 비밀번호를 확인해 주세요.',
+    errorTokenMissing: '로그인 토큰을 받지 못했습니다.',
+    errorLoginFailed: '로그인 중 오류가 발생했습니다.',
+    errorSaveFailed: '저장 중 오류가 발생했습니다.',
+    logout: '로그아웃',
+    saveChanges: '변경사항 저장',
+    saving: '저장 중...',
+    mainInfo: '메인 정보',
+    brandLabel: '헤더 브랜드',
+    dashboardTitleLabel: '대시보드 타이틀',
+    dashboardDescLabel: '한 줄 설명',
+    layoutTitle: '레이아웃',
+    languageLabel: '언어',
+    languageHelp: '화면 표시 언어',
+    layoutColumnsLabel: '큰 화면(데스크톱) 열 수',
+    layoutColumnsHelp: '카테고리 카드의 서비스 그리드 기준',
+    systemSummaryTitle: '시스템 요약 카드',
+    systemSummaryHelp: '최대 {count}개 선택',
+    systemSummaryEmpty: '표시할 항목을 추가해 주세요.',
+    weatherLocationTitle: '날씨 위치',
+    weatherAuto: 'IP 기반 자동',
+    weatherManual: '직접 위치 지정',
+    weatherSearchPlaceholder: '도시 이름 검색 (예: Seoul, 부산)',
+    weatherAutoHint: '첫 로딩 시 IP 기준으로 자동 설정됩니다.',
+    weatherMetaTitle: '날씨 하단 정보',
+    weatherMetaHelp: '최대 {count}개 선택',
+    weatherMetaEmpty: '표시할 항목을 추가해 주세요.',
+    categoryTitle: '카테고리 & 아이템',
+    categoryAdd: '+ 카테고리 추가',
+    serviceAdd: '+ 아이템 추가',
+    remove: '제거',
+    delete: '삭제',
+    searchTitle: '빠른 검색',
+    searchPlaceholder: '서비스 검색...',
+    serviceCount: '{count}개 서비스',
+    systemSummaryCard: '시스템 요약',
+    weatherCard: '오늘의 날씨',
+    iconName: '아이콘 이름',
+    iconUrl: '아이콘 URL (선택)',
+    urlLabel: '서비스 URL',
+    descriptionLabel: '설명',
+    iconNamePlaceholder: '예: tv, cloud, database',
+    serviceDescPlaceholder: '서비스 요약',
+    favoriteLabel: '즐겨찾기 (Dock)',
+    authRequiredLabel: '로그인 필요',
+    targetLabel: '열기 방식',
+    targetSelf: '현재 탭',
+    targetBlank: '새 탭',
+    targetWindow: '새 창',
+    iconPriorityHint:
+      '아이콘 URL → 아이콘 이름 → 사이트 아이콘 순으로 적용됩니다. 사이트 아이콘은 입력한 URL의 /favicon.ico를 자동으로 불러오며, 제공되지 않으면 기본 아이콘으로 대체됩니다.',
+    newCategory: '새 카테고리',
+    newService: '새 서비스',
+    labelActiveServices: '활성 서비스',
+    labelAuthStatus: '인증 상태',
+    labelLastSync: '마지막 동기화',
+    labelCategoryCount: '카테고리 수',
+    labelFavoriteCount: '즐겨찾기',
+    labelHumidity: '습도',
+    labelPrecipProbability: '강수확률',
+    labelPrecipitation: '예상강수량',
+    labelUvIndex: '자외선',
+    labelWindSpeed: '풍속',
+    labelMinTemp: '최저',
+    labelMaxTemp: '최고',
+    labelFeelsLike: '체감',
+    labelSunrise: '일출',
+    labelSunset: '일몰',
+    labelCloudCover: '구름량',
+    labelPressure: '기압',
+    labelVisibility: '가시거리',
+    labelWindGust: '돌풍',
+    labelWindDirection: '풍향',
+    labelDewPoint: '이슬점',
+    labelRain: '시간당 비',
+    labelSnowfall: '시간당 눈',
+    weatherClear: '맑음',
+    weatherPartlyCloudy: '구름 조금',
+    weatherCloudy: '흐림',
+    weatherFog: '안개',
+    weatherDrizzle: '이슬비',
+    weatherSleet: '진눈깨비',
+    weatherRain: '비',
+    weatherFreezingRain: '어는 비',
+    weatherSnow: '눈',
+    weatherSnowGrains: '눈알갱이',
+    weatherShowers: '소나기',
+    weatherSnowShowers: '소낙눈',
+    weatherThunderstorm: '천둥번개',
+    weatherThunderstormHail: '우박 동반 폭풍',
+    weatherUnknown: '변덕스러움'
+  },
+  en: {
+    lockSwipe: 'Swipe up to unlock',
+    loginActive: 'Signed in',
+    loginInactive: 'Signed out',
+    settingsKicker: 'Dashboard Settings',
+    settingsTitle: 'Edit Dashboard',
+    settingsSubtitle:
+      'The main page is public. Editing requires an admin login.',
+    loginEmail: 'Admin email',
+    loginPassword: 'Admin password',
+    loginButton: 'Sign in to edit',
+    close: 'Close',
+    loadingSettings: 'Loading settings...',
+    errorSessionExpired: 'Session expired. Please sign in again.',
+    errorInvalidCredentials: 'Check email or password.',
+    errorTokenMissing: 'No login token received.',
+    errorLoginFailed: 'Login failed.',
+    errorSaveFailed: 'Failed to save changes.',
+    logout: 'Sign out',
+    saveChanges: 'Save changes',
+    saving: 'Saving...',
+    mainInfo: 'Main info',
+    brandLabel: 'Header brand',
+    dashboardTitleLabel: 'Dashboard title',
+    dashboardDescLabel: 'Tagline',
+    layoutTitle: 'Layout',
+    languageLabel: 'Language',
+    languageHelp: 'UI language',
+    layoutColumnsLabel: 'Columns on large screens',
+    layoutColumnsHelp: 'Service grid in category cards',
+    systemSummaryTitle: 'System summary',
+    systemSummaryHelp: 'Select up to {count}',
+    systemSummaryEmpty: 'Add items to display.',
+    weatherLocationTitle: 'Weather location',
+    weatherAuto: 'Auto by IP',
+    weatherManual: 'Set manually',
+    weatherSearchPlaceholder: 'Search city (e.g., Seoul, Tokyo)',
+    weatherAutoHint: 'Defaults to IP-based location.',
+    weatherMetaTitle: 'Weather footer',
+    weatherMetaHelp: 'Select up to {count}',
+    weatherMetaEmpty: 'Add items to display.',
+    categoryTitle: 'Categories & items',
+    categoryAdd: '+ Add category',
+    serviceAdd: '+ Add item',
+    remove: 'Remove',
+    delete: 'Delete',
+    searchTitle: 'Quick search',
+    searchPlaceholder: 'Search services...',
+    serviceCount: '{count} services',
+    systemSummaryCard: 'System summary',
+    weatherCard: 'Today’s weather',
+    iconName: 'Icon name',
+    iconUrl: 'Icon URL (optional)',
+    urlLabel: 'Service URL',
+    descriptionLabel: 'Description',
+    iconNamePlaceholder: 'e.g., tv, cloud, database',
+    serviceDescPlaceholder: 'Service summary',
+    favoriteLabel: 'Favorite (Dock)',
+    authRequiredLabel: 'Require login',
+    targetLabel: 'Open in',
+    targetSelf: 'Current tab',
+    targetBlank: 'New tab',
+    targetWindow: 'New window',
+    iconPriorityHint:
+      'Priority: icon URL → icon name → site icon. The site icon loads from /favicon.ico; if unavailable, the default icon is used.',
+    newCategory: 'New category',
+    newService: 'New service',
+    labelActiveServices: 'Active services',
+    labelAuthStatus: 'Auth status',
+    labelLastSync: 'Last sync',
+    labelCategoryCount: 'Categories',
+    labelFavoriteCount: 'Favorites',
+    labelHumidity: 'Humidity',
+    labelPrecipProbability: 'Precip chance',
+    labelPrecipitation: 'Precip amount',
+    labelUvIndex: 'UV index',
+    labelWindSpeed: 'Wind speed',
+    labelMinTemp: 'Min',
+    labelMaxTemp: 'Max',
+    labelFeelsLike: 'Feels',
+    labelSunrise: 'Sunrise',
+    labelSunset: 'Sunset',
+    labelCloudCover: 'Cloud cover',
+    labelPressure: 'Pressure',
+    labelVisibility: 'Visibility',
+    labelWindGust: 'Wind gust',
+    labelWindDirection: 'Wind dir',
+    labelDewPoint: 'Dew point',
+    labelRain: 'Rain/hr',
+    labelSnowfall: 'Snow/hr',
+    weatherClear: 'Clear',
+    weatherPartlyCloudy: 'Partly cloudy',
+    weatherCloudy: 'Cloudy',
+    weatherFog: 'Fog',
+    weatherDrizzle: 'Drizzle',
+    weatherSleet: 'Sleet',
+    weatherRain: 'Rain',
+    weatherFreezingRain: 'Freezing rain',
+    weatherSnow: 'Snow',
+    weatherSnowGrains: 'Snow grains',
+    weatherShowers: 'Showers',
+    weatherSnowShowers: 'Snow showers',
+    weatherThunderstorm: 'Thunderstorm',
+    weatherThunderstormHail: 'Thunderstorm with hail',
+    weatherUnknown: 'Unsettled'
+  },
+  ja: {
+    lockSwipe: '上にスワイプして解除',
+    loginActive: 'ログイン中',
+    loginInactive: '未ログイン',
+    settingsKicker: 'Dashboard Settings',
+    settingsTitle: 'ダッシュボード設定',
+    settingsSubtitle:
+      'メインページは公開。編集はログインが必要です。',
+    loginEmail: '管理者メール',
+    loginPassword: '管理者パスワード',
+    loginButton: 'ログインして編集',
+    close: '閉じる',
+    loadingSettings: '設定を読み込み中...',
+    errorSessionExpired: 'セッションが切れました。再度ログインしてください。',
+    errorInvalidCredentials: 'メールまたはパスワードを確認してください。',
+    errorTokenMissing: 'ログイントークンを取得できませんでした。',
+    errorLoginFailed: 'ログイン中にエラーが発生しました。',
+    errorSaveFailed: '保存中にエラーが発生しました。',
+    logout: 'ログアウト',
+    saveChanges: '変更を保存',
+    saving: '保存中...',
+    mainInfo: 'メイン情報',
+    brandLabel: 'ヘッダーブランド',
+    dashboardTitleLabel: 'ダッシュボードタイトル',
+    dashboardDescLabel: '説明文',
+    layoutTitle: 'レイアウト',
+    languageLabel: '言語',
+    languageHelp: '表示言語',
+    layoutColumnsLabel: '大画面の列数',
+    layoutColumnsHelp: 'カテゴリカード内のサービス数',
+    systemSummaryTitle: 'システム要約',
+    systemSummaryHelp: '最大{count}件',
+    systemSummaryEmpty: '表示項目を追加してください。',
+    weatherLocationTitle: '天気の場所',
+    weatherAuto: 'IPで自動',
+    weatherManual: '手動設定',
+    weatherSearchPlaceholder: '都市名検索 (例: Seoul, 東京)',
+    weatherAutoHint: '初回はIPベースで自動設定されます。',
+    weatherMetaTitle: '天気の下部情報',
+    weatherMetaHelp: '最大{count}件',
+    weatherMetaEmpty: '表示項目を追加してください。',
+    categoryTitle: 'カテゴリ & アイテム',
+    categoryAdd: '+ カテゴリ追加',
+    serviceAdd: '+ アイテム追加',
+    remove: '削除',
+    delete: '削除',
+    searchTitle: 'クイック検索',
+    searchPlaceholder: 'サービス検索...',
+    serviceCount: '{count}件のサービス',
+    systemSummaryCard: 'システム要約',
+    weatherCard: '今日の天気',
+    iconName: 'アイコン名',
+    iconUrl: 'アイコンURL(任意)',
+    urlLabel: 'サービスURL',
+    descriptionLabel: '説明',
+    iconNamePlaceholder: '例: tv, cloud, database',
+    serviceDescPlaceholder: 'サービス概要',
+    favoriteLabel: 'お気に入り (Dock)',
+    authRequiredLabel: 'ログイン必須',
+    targetLabel: '開く方法',
+    targetSelf: '現在のタブ',
+    targetBlank: '新しいタブ',
+    targetWindow: '新しいウィンドウ',
+    iconPriorityHint:
+      '優先順位: アイコンURL → アイコン名 → サイトアイコン。サイトアイコンは /favicon.ico から取得し、無ければデフォルトになります。',
+    newCategory: '新しいカテゴリ',
+    newService: '新しいサービス',
+    labelActiveServices: '稼働中サービス',
+    labelAuthStatus: '認証状態',
+    labelLastSync: '最終同期',
+    labelCategoryCount: 'カテゴリ数',
+    labelFavoriteCount: 'お気に入り',
+    labelHumidity: '湿度',
+    labelPrecipProbability: '降水確率',
+    labelPrecipitation: '降水量',
+    labelUvIndex: 'UV指数',
+    labelWindSpeed: '風速',
+    labelMinTemp: '最低',
+    labelMaxTemp: '最高',
+    labelFeelsLike: '体感',
+    labelSunrise: '日の出',
+    labelSunset: '日没',
+    labelCloudCover: '雲量',
+    labelPressure: '気圧',
+    labelVisibility: '視程',
+    labelWindGust: '突風',
+    labelWindDirection: '風向',
+    labelDewPoint: '露点',
+    labelRain: '時間雨量',
+    labelSnowfall: '時間降雪',
+    weatherClear: '晴れ',
+    weatherPartlyCloudy: '晴れ時々曇り',
+    weatherCloudy: '曇り',
+    weatherFog: '霧',
+    weatherDrizzle: '霧雨',
+    weatherSleet: 'みぞれ',
+    weatherRain: '雨',
+    weatherFreezingRain: '凍雨',
+    weatherSnow: '雪',
+    weatherSnowGrains: '雪粒',
+    weatherShowers: 'にわか雨',
+    weatherSnowShowers: 'にわか雪',
+    weatherThunderstorm: '雷雨',
+    weatherThunderstormHail: '雹を伴う雷雨',
+    weatherUnknown: '不安定'
+  },
+  zh: {
+    lockSwipe: '上滑解锁',
+    loginActive: '已登录',
+    loginInactive: '未登录',
+    settingsKicker: 'Dashboard Settings',
+    settingsTitle: '编辑仪表盘',
+    settingsSubtitle: '主页公开，编辑需要管理员登录。',
+    loginEmail: '管理员邮箱',
+    loginPassword: '管理员密码',
+    loginButton: '登录后编辑',
+    close: '关闭',
+    loadingSettings: '正在加载设置...',
+    errorSessionExpired: '会话已过期，请重新登录。',
+    errorInvalidCredentials: '请检查邮箱或密码。',
+    errorTokenMissing: '未获取到登录令牌。',
+    errorLoginFailed: '登录过程中发生错误。',
+    errorSaveFailed: '保存失败。',
+    logout: '退出登录',
+    saveChanges: '保存更改',
+    saving: '保存中...',
+    mainInfo: '基本信息',
+    brandLabel: '页眉品牌',
+    dashboardTitleLabel: '仪表盘标题',
+    dashboardDescLabel: '一句话说明',
+    layoutTitle: '布局',
+    languageLabel: '语言',
+    languageHelp: '界面语言',
+    layoutColumnsLabel: '大屏列数',
+    layoutColumnsHelp: '分类卡片内服务列数',
+    systemSummaryTitle: '系统摘要',
+    systemSummaryHelp: '最多选择{count}项',
+    systemSummaryEmpty: '请添加要显示的项。',
+    weatherLocationTitle: '天气位置',
+    weatherAuto: 'IP 自动',
+    weatherManual: '手动设置',
+    weatherSearchPlaceholder: '搜索城市 (例: Seoul, 北京)',
+    weatherAutoHint: '首次加载将基于IP自动设置。',
+    weatherMetaTitle: '天气底部信息',
+    weatherMetaHelp: '最多选择{count}项',
+    weatherMetaEmpty: '请添加要显示的项。',
+    categoryTitle: '分类与项目',
+    categoryAdd: '+ 添加分类',
+    serviceAdd: '+ 添加项目',
+    remove: '移除',
+    delete: '删除',
+    searchTitle: '快速搜索',
+    searchPlaceholder: '搜索服务...',
+    serviceCount: '{count} 个服务',
+    systemSummaryCard: '系统摘要',
+    weatherCard: '今日天气',
+    iconName: '图标名称',
+    iconUrl: '图标URL（可选）',
+    urlLabel: '服务URL',
+    descriptionLabel: '描述',
+    iconNamePlaceholder: '例如：tv, cloud, database',
+    serviceDescPlaceholder: '服务简介',
+    favoriteLabel: '收藏（Dock）',
+    authRequiredLabel: '需要登录',
+    targetLabel: '打开方式',
+    targetSelf: '当前标签',
+    targetBlank: '新标签页',
+    targetWindow: '新窗口',
+    iconPriorityHint:
+      '优先级：图标URL → 图标名称 → 网站图标。网站图标从 /favicon.ico 获取，若无则使用默认图标。',
+    newCategory: '新分类',
+    newService: '新服务',
+    labelActiveServices: '活跃服务',
+    labelAuthStatus: '认证状态',
+    labelLastSync: '最后同步',
+    labelCategoryCount: '分类数',
+    labelFavoriteCount: '收藏',
+    labelHumidity: '湿度',
+    labelPrecipProbability: '降水概率',
+    labelPrecipitation: '降水量',
+    labelUvIndex: '紫外线',
+    labelWindSpeed: '风速',
+    labelMinTemp: '最低',
+    labelMaxTemp: '最高',
+    labelFeelsLike: '体感',
+    labelSunrise: '日出',
+    labelSunset: '日落',
+    labelCloudCover: '云量',
+    labelPressure: '气压',
+    labelVisibility: '能见度',
+    labelWindGust: '阵风',
+    labelWindDirection: '风向',
+    labelDewPoint: '露点',
+    labelRain: '每小时降雨',
+    labelSnowfall: '每小时降雪',
+    weatherClear: '晴',
+    weatherPartlyCloudy: '少云',
+    weatherCloudy: '多云',
+    weatherFog: '雾',
+    weatherDrizzle: '毛毛雨',
+    weatherSleet: '雨夹雪',
+    weatherRain: '雨',
+    weatherFreezingRain: '冻雨',
+    weatherSnow: '雪',
+    weatherSnowGrains: '雪粒',
+    weatherShowers: '阵雨',
+    weatherSnowShowers: '阵雪',
+    weatherThunderstorm: '雷阵雨',
+    weatherThunderstormHail: '雷阵雨伴冰雹',
+    weatherUnknown: '多变'
+  }
+} as const;
+
+type TranslationKey = keyof typeof TRANSLATIONS.ko;
+
 const SYSTEM_SUMMARY_OPTIONS = [
-  { key: 'activeServices', label: '활성 서비스' },
-  { key: 'authStatus', label: '인증 상태' },
-  { key: 'lastSync', label: '마지막 동기화' },
-  { key: 'categoryCount', label: '카테고리 수' },
-  { key: 'favoriteCount', label: '즐겨찾기' }
+  { key: 'activeServices', labelKey: 'labelActiveServices' },
+  { key: 'authStatus', labelKey: 'labelAuthStatus' },
+  { key: 'lastSync', labelKey: 'labelLastSync' },
+  { key: 'categoryCount', labelKey: 'labelCategoryCount' },
+  { key: 'favoriteCount', labelKey: 'labelFavoriteCount' }
 ] as const;
 
 const WEATHER_META_OPTIONS = [
-  { key: 'humidity', label: '습도' },
-  { key: 'precipitationProbability', label: '강수확률' },
-  { key: 'precipitation', label: '예상강수량' },
-  { key: 'uvIndex', label: '자외선' },
-  { key: 'windSpeed', label: '풍속' },
-  { key: 'cloudCover', label: '구름량' },
-  { key: 'pressure', label: '기압' },
-  { key: 'visibility', label: '가시거리' },
-  { key: 'windGust', label: '돌풍' },
-  { key: 'windDirection', label: '풍향' },
-  { key: 'dewPoint', label: '이슬점' },
-  { key: 'rain', label: '시간당 비' },
-  { key: 'snowfall', label: '시간당 눈' }
+  { key: 'humidity', labelKey: 'labelHumidity' },
+  { key: 'precipitationProbability', labelKey: 'labelPrecipProbability' },
+  { key: 'precipitation', labelKey: 'labelPrecipitation' },
+  { key: 'uvIndex', labelKey: 'labelUvIndex' },
+  { key: 'windSpeed', labelKey: 'labelWindSpeed' },
+  { key: 'cloudCover', labelKey: 'labelCloudCover' },
+  { key: 'pressure', labelKey: 'labelPressure' },
+  { key: 'visibility', labelKey: 'labelVisibility' },
+  { key: 'windGust', labelKey: 'labelWindGust' },
+  { key: 'windDirection', labelKey: 'labelWindDirection' },
+  { key: 'dewPoint', labelKey: 'labelDewPoint' },
+  { key: 'rain', labelKey: 'labelRain' },
+  { key: 'snowfall', labelKey: 'labelSnowfall' }
 ] as const;
 
 type SystemSummaryKey = (typeof SYSTEM_SUMMARY_OPTIONS)[number]['key'];
@@ -83,6 +530,7 @@ type CategoryWithTone = Category & {
 
 type WeatherState = {
   icon: string;
+  code: number;
   temperature: number;
   feelsLike: number;
   humidity: number;
@@ -312,16 +760,16 @@ const fallbackCategories: Category[] = [
   }
 ];
 
-function formatTime(now: Date) {
-  return now.toLocaleTimeString('ko-KR', {
+function formatTime(now: Date, locale: string) {
+  return now.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false
   });
 }
 
-function formatDate(now: Date) {
-  return now.toLocaleDateString('ko-KR', {
+function formatDate(now: Date, locale: string) {
+  return now.toLocaleDateString(locale, {
     weekday: 'long',
     month: 'long',
     day: 'numeric'
@@ -395,6 +843,73 @@ function buildUrl(protocol: string, rest: string) {
   return `${normalizedProtocol}://${trimmed}`;
 }
 
+function weatherSummaryKeyFromCode(code?: number): TranslationKey {
+  if (code === 0) {
+    return 'weatherClear';
+  }
+  if (code === 1 || code === 2) {
+    return 'weatherPartlyCloudy';
+  }
+  if (code === 3) {
+    return 'weatherCloudy';
+  }
+  if (code === 45 || code === 48) {
+    return 'weatherFog';
+  }
+  if (code === 51 || code === 53 || code === 55) {
+    return 'weatherDrizzle';
+  }
+  if (code === 56 || code === 57) {
+    return 'weatherSleet';
+  }
+  if (code === 61 || code === 63 || code === 65) {
+    return 'weatherRain';
+  }
+  if (code === 66 || code === 67) {
+    return 'weatherFreezingRain';
+  }
+  if (code === 71 || code === 73 || code === 75) {
+    return 'weatherSnow';
+  }
+  if (code === 77) {
+    return 'weatherSnowGrains';
+  }
+  if (code === 80 || code === 81 || code === 82) {
+    return 'weatherShowers';
+  }
+  if (code === 85 || code === 86) {
+    return 'weatherSnowShowers';
+  }
+  if (code === 95) {
+    return 'weatherThunderstorm';
+  }
+  if (code === 96 || code === 99) {
+    return 'weatherThunderstormHail';
+  }
+  return 'weatherUnknown';
+}
+
+function translate(
+  language: LanguageCode,
+  key: TranslationKey,
+  vars?: Record<string, string | number>
+) {
+  const entry = String(
+    TRANSLATIONS[language]?.[key] ??
+      TRANSLATIONS.en[key] ??
+      TRANSLATIONS.ko[key] ??
+      key
+  );
+  if (!vars) {
+    return entry;
+  }
+  let result = entry;
+  for (const [varKey, value] of Object.entries(vars)) {
+    result = result.replace(`{${varKey}}`, String(value));
+  }
+  return result;
+}
+
 function normalizeOrder(
   order: string[] | null | undefined,
   defaults: readonly string[],
@@ -412,6 +927,12 @@ function normalizeOrder(
 
 function normalizeConfig(input: DashboardConfig) {
   const next = { ...defaultConfig, ...input };
+  if (!LANGUAGE_OPTIONS.some((option) => option.code === next.language)) {
+    next.language = defaultConfig.language;
+  }
+  if (!GRID_COLUMN_OPTIONS.includes(next.serviceGridColumnsLg as 4 | 5 | 6)) {
+    next.serviceGridColumnsLg = defaultConfig.serviceGridColumnsLg;
+  }
   if (
     !Array.isArray(next.systemSummaryOrder) ||
     next.systemSummaryOrder.length === 0
@@ -588,6 +1109,7 @@ export default function HomePage() {
   const [query, setQuery] = useState('');
   const [weather, setWeather] = useState<WeatherState>({
     icon: '⛅',
+    code: 0,
     temperature: 22,
     feelsLike: 24,
     humidity: 48,
@@ -623,13 +1145,26 @@ export default function HomePage() {
   const dragState = useRef({ active: false, startY: 0, delta: 0 });
   const idleTimer = useRef<number | null>(null);
 
-  const timeLabel = useMemo(() => formatTime(now), [now]);
-  const dateLabel = useMemo(() => formatDate(now), [now]);
+  const activeLanguage =
+    settingsOpen && draftConfig ? draftConfig.language : config.language;
+  const language = activeLanguage ?? defaultConfig.language;
+  const locale = LOCALE_BY_LANGUAGE[language] ?? LOCALE_BY_LANGUAGE.ko;
+  const timeLabel = useMemo(() => formatTime(now, locale), [now, locale]);
+  const dateLabel = useMemo(() => formatDate(now, locale), [now, locale]);
+  const t = useMemo(
+    () => (key: TranslationKey, vars?: Record<string, string | number>) =>
+      translate(language, key, vars),
+    [language]
+  );
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   useEffect(() => {
     if (!unlocked) {
@@ -713,6 +1248,7 @@ export default function HomePage() {
             snowfall?: number;
             summary?: string;
             icon?: string;
+            code?: number;
           };
           daily?: {
             minTemp?: number;
@@ -726,6 +1262,7 @@ export default function HomePage() {
 
         setWeather({
           icon: data.current.icon ?? '⛅',
+          code: Number(data.current.code ?? 0),
           temperature: Number(data.current.temperature ?? 22),
           feelsLike: Number(data.current.feelsLike ?? 24),
           humidity: Number(data.current.humidity ?? 48),
@@ -828,7 +1365,7 @@ export default function HomePage() {
       });
       if (response.status === 401) {
         setToken(null);
-        setLoginError('세션이 만료되었습니다. 다시 로그인하세요.');
+        setLoginError(t('errorSessionExpired'));
         return;
       }
       if (!response.ok) {
@@ -884,8 +1421,6 @@ export default function HomePage() {
     lockRef.current.style.transform = 'translateY(0)';
   };
 
-  const authStatusLabel = token ? '편집 로그인 유지 중' : '로그인 제외(메인 보기)';
-
   const tonedCategories = useMemo(() => withTones(categories), [categories]);
 
   const visibleCategories = useMemo(() => {
@@ -915,13 +1450,17 @@ export default function HomePage() {
       .filter((category) => category.services.length > 0);
   }, [query, tonedCategories, token]);
 
-  const favorites = useMemo(() => {
+  const allFavorites = useMemo(() => {
     const items = categories.flatMap((category) => category.services ?? []);
     return items
       .filter((service) => service.isFavorite)
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-      .slice(0, 3);
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [categories]);
+
+  const dockFavorites = useMemo(
+    () => allFavorites.slice(0, 3),
+    [allFavorites]
+  );
 
   const systemSummaryOrder = useMemo(
     () =>
@@ -945,6 +1484,8 @@ export default function HomePage() {
     [config.weatherMetaOrder]
   );
 
+  const authStatusLabel = token ? t('loginActive') : t('loginInactive');
+
   const systemSummaryValues = useMemo<Record<SystemSummaryKey, string>>(
     () => ({
       activeServices: `${categories.reduce(
@@ -954,9 +1495,9 @@ export default function HomePage() {
       authStatus: authStatusLabel,
       lastSync: timeLabel,
       categoryCount: `${categories.length}`,
-      favoriteCount: `${favorites.length}`
+      favoriteCount: `${allFavorites.length}`
     }),
-    [authStatusLabel, categories, favorites.length, timeLabel]
+    [authStatusLabel, categories, allFavorites.length, timeLabel]
   );
 
   const weatherMetaValues = useMemo<Record<WeatherMetaKey, string>>(
@@ -978,6 +1519,10 @@ export default function HomePage() {
       snowfall: `${weather.snowfall.toFixed(1)}cm`
     }),
     [weather]
+  );
+  const weatherSummary = useMemo(
+    () => translate(language, weatherSummaryKeyFromCode(weather.code)),
+    [language, weather.code]
   );
 
   const openSettings = () => {
@@ -1002,7 +1547,7 @@ export default function HomePage() {
       });
 
       if (!response.ok) {
-        setLoginError('이메일 또는 비밀번호를 확인해 주세요.');
+        setLoginError(t('errorInvalidCredentials'));
         return;
       }
 
@@ -1011,14 +1556,14 @@ export default function HomePage() {
       };
 
       if (!data.accessToken) {
-        setLoginError('로그인 토큰을 받지 못했습니다.');
+        setLoginError(t('errorTokenMissing'));
         return;
       }
 
       setToken(data.accessToken);
       await loadAdminDashboard(data.accessToken);
     } catch {
-      setLoginError('로그인 중 오류가 발생했습니다.');
+      setLoginError(t('errorLoginFailed'));
     }
   };
 
@@ -1051,7 +1596,7 @@ export default function HomePage() {
   const addCategory = () => {
     const next: Category = {
       id: createId(),
-      name: '새 카테고리',
+      name: t('newCategory'),
       color: categoryTones[0].accent,
       sortOrder: draftCategories.length,
       services: []
@@ -1079,7 +1624,7 @@ export default function HomePage() {
   const addService = (categoryId: string) => {
     const nextService: Service = {
       id: createId(),
-      name: '새 서비스',
+      name: t('newService'),
       url: 'http://',
       description: '',
       icon: '',
@@ -1242,6 +1787,8 @@ export default function HomePage() {
         body: JSON.stringify({
           config: {
             brandName: draftConfig.brandName,
+            language: draftConfig.language,
+            serviceGridColumnsLg: draftConfig.serviceGridColumnsLg,
             title: draftConfig.title,
             description: draftConfig.description,
             weatherMode: draftConfig.weatherMode,
@@ -1270,7 +1817,7 @@ export default function HomePage() {
       setCategories(data.categories ?? normalizedCategories);
       setSettingsOpen(false);
     } catch {
-      setLoginError('저장 중 오류가 발생했습니다.');
+      setLoginError(t('errorSaveFailed'));
     } finally {
       setSaving(false);
     }
@@ -1311,7 +1858,7 @@ export default function HomePage() {
       >
         <div className="status-bar">
           <div className="status-left">
-            {token ? '로그인 유지 중' : '비로그인'}
+            {token ? t('loginActive') : t('loginInactive')}
           </div>
           <div className="status-right" />
         </div>
@@ -1320,11 +1867,18 @@ export default function HomePage() {
           <div className="lock-date">{dateLabel}</div>
         </div>
         <div className="swipe-indicator">
-          <span>↑</span> 위로 밀어 잠금 해제
+          <span>↑</span> {t('lockSwipe')}
         </div>
       </div>
 
-      <main className={`home-screen ${unlocked ? 'visible' : ''}`}>
+      <main
+        className={`home-screen ${unlocked ? 'visible' : ''}`}
+        style={
+          {
+            '--service-columns': config.serviceGridColumnsLg
+          } as CSSProperties
+        }
+      >
         <div className="container">
           <div className="status-bar">
             <div className="status-left">{timeLabel}</div>
@@ -1340,11 +1894,12 @@ export default function HomePage() {
 
           <section className="overview-grid">
             <div className="glass-card">
-              <h3>시스템 요약</h3>
+              <h3>{t('systemSummaryCard')}</h3>
               {systemSummaryOrder.map((key) => {
-                const label =
-                  SYSTEM_SUMMARY_OPTIONS.find((option) => option.key === key)
-                    ?.label ?? key;
+                const labelKey = SYSTEM_SUMMARY_OPTIONS.find(
+                  (option) => option.key === key
+                )?.labelKey;
+                const label = labelKey ? t(labelKey as TranslationKey) : key;
                 const value =
                   systemSummaryValues[key as SystemSummaryKey] ?? '-';
                 return (
@@ -1356,7 +1911,7 @@ export default function HomePage() {
               })}
             </div>
             <div className="glass-card weather-card">
-              <h3>오늘의 날씨</h3>
+              <h3>{t('weatherCard')}</h3>
               <div className="weather-header">
                 <div className="weather-icon">{weather.icon}</div>
                 <div>
@@ -1364,26 +1919,35 @@ export default function HomePage() {
                     {Math.round(weather.temperature)}°C
                   </div>
                   <div className="weather-summary">
-                    {weather.summary} · {weather.location}
+                    {weatherSummary} · {weather.location}
                   </div>
                   <div className="weather-range">
-                    <span>최저 {Math.round(weather.minTemp)}°</span>
-                    <span>최고 {Math.round(weather.maxTemp)}°</span>
+                    <span>
+                      {t('labelMinTemp')} {Math.round(weather.minTemp)}°
+                    </span>
+                    <span>
+                      {t('labelMaxTemp')} {Math.round(weather.maxTemp)}°
+                    </span>
                     <span className="weather-feels">
-                      체감 {Math.round(weather.feelsLike)}°C
+                      {t('labelFeelsLike')} {Math.round(weather.feelsLike)}°C
                     </span>
                   </div>
                   <div className="weather-sun">
-                    <span>일출 {weather.sunrise}</span>
-                    <span>일몰 {weather.sunset}</span>
+                    <span>
+                      {t('labelSunrise')} {weather.sunrise}
+                    </span>
+                    <span>
+                      {t('labelSunset')} {weather.sunset}
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="weather-meta">
                 {weatherMetaOrder.map((key) => {
-                  const label =
-                    WEATHER_META_OPTIONS.find((option) => option.key === key)
-                      ?.label ?? key;
+                  const labelKey = WEATHER_META_OPTIONS.find(
+                    (option) => option.key === key
+                  )?.labelKey;
+                  const label = labelKey ? t(labelKey as TranslationKey) : key;
                   const value =
                     weatherMetaValues[key as WeatherMetaKey] ?? '-';
                   return (
@@ -1398,11 +1962,11 @@ export default function HomePage() {
 
           <section className="glass-card search-panel">
             <div>
-              <h3>빠른 검색</h3>
+              <h3>{t('searchTitle')}</h3>
             </div>
             <input
               className="search-input compact"
-              placeholder="서비스 검색..."
+              placeholder={t('searchPlaceholder')}
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -1426,7 +1990,7 @@ export default function HomePage() {
                     <span>{category.name}</span>
                   </div>
                   <div className="category-meta">
-                    {category.services.length}개 서비스
+                    {t('serviceCount', { count: category.services.length })}
                   </div>
                 </div>
                 <div className="service-grid">
@@ -1458,7 +2022,7 @@ export default function HomePage() {
         </div>
 
         <div className="dock">
-          {favorites.map((service) => (
+          {dockFavorites.map((service) => (
             <a
               key={service.id}
               className="dock-item"
@@ -1480,26 +2044,23 @@ export default function HomePage() {
           <div className="settings-card">
             <div className="settings-header">
               <div>
-                <div className="settings-kicker">Dashboard Settings</div>
-                <h2>대시보드 구성 변경</h2>
-                <p className="helper-text">
-                  메인 페이지는 로그인 없이 공개되고, 구성 변경은 로그인 후
-                  가능합니다.
-                </p>
+                <div className="settings-kicker">{t('settingsKicker')}</div>
+                <h2>{t('settingsTitle')}</h2>
+                <p className="helper-text">{t('settingsSubtitle')}</p>
               </div>
               <button
                 type="button"
                 className="button secondary"
                 onClick={() => setSettingsOpen(false)}
               >
-                닫기
+                {t('close')}
               </button>
             </div>
 
             {!token ? (
               <form className="settings-auth" onSubmit={handleLogin}>
                 <div className="auth-field">
-                  <label>관리자 이메일</label>
+                  <label>{t('loginEmail')}</label>
                   <input
                     type="email"
                     value={loginEmail}
@@ -1509,7 +2070,7 @@ export default function HomePage() {
                   />
                 </div>
                 <div className="auth-field">
-                  <label>관리자 비밀번호</label>
+                  <label>{t('loginPassword')}</label>
                   <input
                     type="password"
                     value={loginPassword}
@@ -1523,7 +2084,7 @@ export default function HomePage() {
                 ) : null}
                 <div className="auth-actions">
                   <button className="button" type="submit">
-                    로그인 후 편집
+                    {t('loginButton')}
                   </button>
                 </div>
               </form>
@@ -1531,10 +2092,10 @@ export default function HomePage() {
               <>
                 <div className="settings-body">
                 <section className="settings-section">
-                  <h3>메인 정보</h3>
+                  <h3>{t('mainInfo')}</h3>
                   <div className="settings-grid">
                     <div className="auth-field">
-                      <label>헤더 브랜드</label>
+                      <label>{t('brandLabel')}</label>
                       <input
                         type="text"
                         value={draftConfig.brandName}
@@ -1548,7 +2109,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div className="auth-field">
-                      <label>대시보드 타이틀</label>
+                      <label>{t('dashboardTitleLabel')}</label>
                       <input
                         type="text"
                         value={draftConfig.title}
@@ -1562,7 +2123,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div className="auth-field">
-                      <label>한 줄 설명</label>
+                      <label>{t('dashboardDescLabel')}</label>
                       <input
                         type="text"
                         value={draftConfig.description}
@@ -1579,16 +2140,68 @@ export default function HomePage() {
                 </section>
 
                 <section className="settings-section">
+                  <h3>{t('layoutTitle')}</h3>
+                  <div className="settings-grid">
+                    <div className="auth-field">
+                      <label>{t('languageLabel')}</label>
+                      <select
+                        value={draftConfig.language}
+                        onChange={(event) =>
+                          setDraftConfig((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  language: event.target.value as LanguageCode
+                                }
+                              : prev
+                          )
+                        }
+                      >
+                        {LANGUAGE_OPTIONS.map((option) => (
+                          <option key={option.code} value={option.code}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="helper-text">{t('languageHelp')}</span>
+                    </div>
+                    <div className="auth-field">
+                      <label>{t('layoutColumnsLabel')}</label>
+                      <select
+                        value={draftConfig.serviceGridColumnsLg}
+                        onChange={(event) =>
+                          setDraftConfig((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  serviceGridColumnsLg: Number(event.target.value)
+                                }
+                              : prev
+                          )
+                        }
+                      >
+                        {GRID_COLUMN_OPTIONS.map((count) => (
+                          <option key={count} value={count}>
+                            {count}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="helper-text">{t('layoutColumnsHelp')}</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="settings-section">
                   <div className="section-header">
-                    <h3>시스템 요약 카드</h3>
+                    <h3>{t('systemSummaryTitle')}</h3>
                     <span className="helper-text">
-                      최대 {SYSTEM_SUMMARY_MAX}개 선택
+                      {t('systemSummaryHelp', { count: SYSTEM_SUMMARY_MAX })}
                     </span>
                   </div>
                   <div className="option-list">
                     {selectedSystemSummary.length === 0 ? (
                       <div className="option-empty">
-                        표시할 항목을 추가해 주세요.
+                        {t('systemSummaryEmpty')}
                       </div>
                     ) : (
                       selectedSystemSummary.map((key, index) => {
@@ -1598,7 +2211,7 @@ export default function HomePage() {
                         return (
                           <div key={key} className="option-row">
                             <span className="option-title">
-                              {option?.label ?? key}
+                              {option ? t(option.labelKey as TranslationKey) : key}
                             </span>
                             <div className="option-actions">
                               <button
@@ -1620,7 +2233,7 @@ export default function HomePage() {
                                 className="danger"
                                 onClick={() => removeSystemSummaryKey(key)}
                               >
-                                제거
+                                {t('remove')}
                               </button>
                             </div>
                           </div>
@@ -1640,7 +2253,7 @@ export default function HomePage() {
                           onClick={() => addSystemSummaryKey(option.key)}
                           disabled={disabled}
                         >
-                          + {option.label}
+                          + {t(option.labelKey as TranslationKey)}
                         </button>
                       );
                     })}
@@ -1648,7 +2261,7 @@ export default function HomePage() {
                 </section>
 
                 <section className="settings-section">
-                  <h3>날씨 위치</h3>
+                  <h3>{t('weatherLocationTitle')}</h3>
                   <div className="settings-row">
                     <label className="radio-pill">
                       <input
@@ -1660,7 +2273,7 @@ export default function HomePage() {
                           )
                         }
                       />
-                      IP 기반 자동
+                      {t('weatherAuto')}
                     </label>
                     <label className="radio-pill">
                       <input
@@ -1672,7 +2285,7 @@ export default function HomePage() {
                           )
                         }
                       />
-                      직접 위치 지정
+                      {t('weatherManual')}
                     </label>
                   </div>
                   {draftConfig.weatherMode === 'manual' ? (
@@ -1683,7 +2296,7 @@ export default function HomePage() {
                         onChange={(event) =>
                           setLocationQuery(event.target.value)
                         }
-                        placeholder="도시 이름 검색 (예: Seoul, 부산)"
+                        placeholder={t('weatherSearchPlaceholder')}
                       />
                       {locationOptions.length > 0 ? (
                         <div className="location-list">
@@ -1705,22 +2318,22 @@ export default function HomePage() {
                     </div>
                   ) : (
                     <p className="helper-text">
-                      첫 로딩 시 IP 기준으로 자동 설정됩니다.
+                      {t('weatherAutoHint')}
                     </p>
                   )}
                 </section>
 
                 <section className="settings-section">
                   <div className="section-header">
-                    <h3>날씨 하단 정보</h3>
+                    <h3>{t('weatherMetaTitle')}</h3>
                     <span className="helper-text">
-                      최대 {WEATHER_META_MAX}개 선택
+                      {t('weatherMetaHelp', { count: WEATHER_META_MAX })}
                     </span>
                   </div>
                   <div className="option-list">
                     {selectedWeatherMeta.length === 0 ? (
                       <div className="option-empty">
-                        표시할 항목을 추가해 주세요.
+                        {t('weatherMetaEmpty')}
                       </div>
                     ) : (
                       selectedWeatherMeta.map((key, index) => {
@@ -1730,7 +2343,7 @@ export default function HomePage() {
                         return (
                           <div key={key} className="option-row">
                             <span className="option-title">
-                              {option?.label ?? key}
+                              {option ? t(option.labelKey as TranslationKey) : key}
                             </span>
                             <div className="option-actions">
                               <button
@@ -1752,7 +2365,7 @@ export default function HomePage() {
                                 className="danger"
                                 onClick={() => removeWeatherMetaKey(key)}
                               >
-                                제거
+                                {t('remove')}
                               </button>
                             </div>
                           </div>
@@ -1772,7 +2385,7 @@ export default function HomePage() {
                           onClick={() => addWeatherMetaKey(option.key)}
                           disabled={disabled}
                         >
-                          + {option.label}
+                          + {t(option.labelKey as TranslationKey)}
                         </button>
                       );
                     })}
@@ -1781,13 +2394,13 @@ export default function HomePage() {
 
                 <section className="settings-section">
                   <div className="section-header">
-                    <h3>카테고리 & 아이템</h3>
+                    <h3>{t('categoryTitle')}</h3>
                     <button
                       type="button"
                       className="button secondary"
                       onClick={addCategory}
                     >
-                      + 카테고리 추가
+                      {t('categoryAdd')}
                     </button>
                   </div>
 
@@ -1831,7 +2444,7 @@ export default function HomePage() {
                               className="danger"
                               onClick={() => removeCategory(category.id)}
                             >
-                              삭제
+                              {t('delete')}
                             </button>
                           </div>
                         </div>
@@ -1879,20 +2492,17 @@ export default function HomePage() {
                                         removeService(category.id, service.id)
                                       }
                                     >
-                                      삭제
+                                      {t('delete')}
                                     </button>
                                   </div>
                                 </div>
 
                                 <div className="service-editor-hint">
-                                  아이콘 URL → 아이콘 이름 → 사이트 아이콘 순으로
-                                  적용됩니다. 사이트 아이콘은 입력한 URL의
-                                  `/favicon.ico`를 자동으로 불러오며, 제공되지 않으면
-                                  기본 아이콘으로 대체됩니다.
+                                  {t('iconPriorityHint')}
                                 </div>
                                 <div className="service-editor-grid">
                                   <div className="field">
-                                    <label>아이콘 이름</label>
+                                    <label>{t('iconName')}</label>
                                     <IconPicker
                                       value={service.icon ?? ''}
                                       onChange={(value) =>
@@ -1900,11 +2510,11 @@ export default function HomePage() {
                                           icon: value
                                         })
                                       }
-                                      placeholder="예: tv, cloud, database"
+                                      placeholder={t('iconNamePlaceholder')}
                                     />
                                   </div>
                                   <div className="field">
-                                    <label>아이콘 URL (선택)</label>
+                                    <label>{t('iconUrl')}</label>
                                     <input
                                       type="text"
                                       value={service.iconUrl ?? ''}
@@ -1917,7 +2527,7 @@ export default function HomePage() {
                                     />
                                   </div>
                                   <div className="field url-field">
-                                    <label>서비스 URL</label>
+                                    <label>{t('urlLabel')}</label>
                                     <div className="url-input">
                                       <select
                                         value={protocol}
@@ -1943,7 +2553,7 @@ export default function HomePage() {
                                     </div>
                                   </div>
                                   <div className="field">
-                                    <label>설명</label>
+                                    <label>{t('descriptionLabel')}</label>
                                     <input
                                       type="text"
                                       value={service.description ?? ''}
@@ -1952,7 +2562,7 @@ export default function HomePage() {
                                           description: event.target.value
                                         })
                                       }
-                                      placeholder="서비스 요약"
+                                      placeholder={t('serviceDescPlaceholder')}
                                     />
                                   </div>
                                 </div>
@@ -1968,7 +2578,7 @@ export default function HomePage() {
                                         })
                                       }
                                     />
-                                    즐겨찾기 (Dock)
+                                    {t('favoriteLabel')}
                                   </label>
                                   <label className="checkbox-pill">
                                     <input
@@ -1980,10 +2590,10 @@ export default function HomePage() {
                                         })
                                       }
                                     />
-                                    로그인 필요
+                                    {t('authRequiredLabel')}
                                   </label>
                                   <div className="field inline">
-                                    <label>열기 방식</label>
+                                    <label>{t('targetLabel')}</label>
                                     <select
                                       value={service.target ?? '_blank'}
                                       onChange={(event) =>
@@ -1992,9 +2602,9 @@ export default function HomePage() {
                                         })
                                       }
                                     >
-                                      <option value="_self">현재 탭</option>
-                                      <option value="_blank">새 탭</option>
-                                      <option value="window">새 창</option>
+                                      <option value="_self">{t('targetSelf')}</option>
+                                      <option value="_blank">{t('targetBlank')}</option>
+                                      <option value="window">{t('targetWindow')}</option>
                                     </select>
                                   </div>
                                 </div>
@@ -2006,7 +2616,7 @@ export default function HomePage() {
                             className="button ghost"
                             onClick={() => addService(category.id)}
                           >
-                            + 아이템 추가
+                            {t('serviceAdd')}
                           </button>
                         </div>
                       </div>
@@ -2025,7 +2635,7 @@ export default function HomePage() {
                       className="button secondary"
                       onClick={() => setToken(null)}
                     >
-                      로그아웃
+                      {t('logout')}
                     </button>
                     <button
                       type="button"
@@ -2033,13 +2643,13 @@ export default function HomePage() {
                       disabled={saving}
                       onClick={handleSave}
                     >
-                      {saving ? '저장 중...' : '변경사항 저장'}
+                      {saving ? t('saving') : t('saveChanges')}
                     </button>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="settings-loading">설정을 불러오는 중...</div>
+              <div className="settings-loading">{t('loadingSettings')}</div>
             )}
           </div>
         </div>

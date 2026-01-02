@@ -338,7 +338,7 @@ body::after {
 
 .service-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--service-columns, 4), minmax(0, 1fr));
   gap: 16px;
   position: relative;
   z-index: 1;
@@ -507,6 +507,14 @@ body::after {
 }
 
 .auth-field input {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(10, 16, 32, 0.6);
+  color: var(--text-primary);
+}
+
+.auth-field select {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--stroke);

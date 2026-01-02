@@ -26,6 +26,8 @@ export type Category = {
 export type DashboardConfig = {
   id: string;
   brandName: string;
+  language: 'ko' | 'en' | 'ja' | 'zh';
+  serviceGridColumnsLg: number;
   title: string;
   description: string;
   weatherMode: 'auto' | 'manual';
