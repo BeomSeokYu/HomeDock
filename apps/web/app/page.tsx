@@ -1656,6 +1656,31 @@ export default function HomePage() {
     }
   };
 
+  const unlockNow = (withKick = false) => {
+    if (withKick && lockRef.current) {
+      lockRef.current.style.transition = 'transform 0.15s ease';
+      lockRef.current.style.transform = 'translateY(-48px)';
+      window.setTimeout(() => {
+        if (!lockRef.current) {
+          setUnlocked(true);
+          return;
+        }
+        lockRef.current.style.transition = '';
+        setUnlocked(true);
+        window.requestAnimationFrame(() => {
+          if (!lockRef.current) return;
+          lockRef.current.style.transform = '';
+        });
+      }, 120);
+      return;
+    }
+    setUnlocked(true);
+    if (lockRef.current) {
+      lockRef.current.style.transition = 'transform 0.5s ease';
+      lockRef.current.style.transform = '';
+    }
+  };
+
   const startDrag = (clientY: number) => {
     dragState.current.active = true;
     dragState.current.startY = clientY;
@@ -1681,8 +1706,7 @@ export default function HomePage() {
 
     const threshold = Math.min(120, window.innerHeight * 0.12);
     if (delta > threshold) {
-      setUnlocked(true);
-      lockRef.current.style.transform = '';
+      unlockNow();
       return;
     }
 
@@ -1690,6 +1714,10 @@ export default function HomePage() {
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement | null)?.closest('.swipe-indicator')) {
+      unlockNow(true);
+      return;
+    }
     event.preventDefault();
     lockRef.current?.setPointerCapture(event.pointerId);
     startDrag(event.clientY);
@@ -1705,6 +1733,10 @@ export default function HomePage() {
   };
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement | null)?.closest('.swipe-indicator')) {
+      unlockNow(true);
+      return;
+    }
     const touch = event.touches[0];
     if (!touch) return;
     startDrag(touch.clientY);
@@ -2296,9 +2328,31 @@ export default function HomePage() {
           <div className="lock-time">{timeLabel}</div>
           <div className="lock-date">{dateLabel}</div>
         </div>
-        <div className="swipe-indicator">
+        <button
+          type="button"
+          className="swipe-indicator"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            unlockNow(true);
+          }}
+          onMouseDownCapture={(event) => event.stopPropagation()}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            unlockNow(true);
+          }}
+          onPointerDownCapture={(event) => event.stopPropagation()}
+          onTouchStart={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            unlockNow(true);
+          }}
+          onTouchStartCapture={(event) => event.stopPropagation()}
+          onClick={() => unlockNow(true)}
+        >
           <span>↑</span> {t('lockSwipe')}
-        </div>
+        </button>
       </div>
 
       <main

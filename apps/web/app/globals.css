@@ -184,6 +184,9 @@ body::after {
   backdrop-filter: blur(12px);
   animation: swipeBounce 2.2s infinite;
   font-size: 0.9rem;
+  border: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 .home-screen {
