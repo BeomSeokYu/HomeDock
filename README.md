@@ -12,6 +12,10 @@ It is a Next.js + NestJS monorepo with a SQLite-backed configuration, designed f
 - System summary card with configurable fields and order.
 - Built-in i18n: Korean, English, Japanese, Chinese.
 
+## Screenshots
+![Lock screen](docs/screenshots/lock-screen.png)
+![Main dashboard](docs/screenshots/dashboard.png)
+
 ## Requirements
 - Node.js 18+
 - pnpm 9+ (via Corepack)

@@ -10,6 +10,10 @@ Next.js + NestJS 모노레포 구성이며 SQLite 기반 설정을 사용하고,
 - 시스템 요약 카드/날씨 하단 정보의 항목·순서 커스터마이징
 - 한국어/영어/일본어/중국어 다국어 지원
 
+## 스크린샷
+![잠금 화면](docs/screenshots/lock-screen.png)
+![메인 대시보드](docs/screenshots/dashboard.png)
+
 ## 요구 사항
 - Node.js 18+
 - pnpm 9+ (Corepack 사용)
