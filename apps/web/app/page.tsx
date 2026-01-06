@@ -720,7 +720,7 @@ const WEATHER_META_KEYS = WEATHER_META_OPTIONS.map(
   (option) => option.key
 ) as WeatherMetaKey[];
 
-const IDLE_LOCK_TIMEOUT_MS = 60000;
+const IDLE_LOCK_TIMEOUT_MS = 600000;
 
 type CategoryWithTone = Category & {
   tone: { accent: string; glow: string };
