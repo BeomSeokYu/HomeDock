@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
@@ -31,7 +31,10 @@ export const metadata: Metadata = {
     capable: true,
     title: 'HomeDock',
     statusBarStyle: 'black-translucent'
-  },
+  }
+};
+
+export const viewport: Viewport = {
   themeColor: '#0b0f16'
 };
 
