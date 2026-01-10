@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, PointerEvent } from 'react';
-import { AppIcon, appIconOptions } from './components/AppIcon';
+import { CategoryGrid } from './components/CategoryGrid';
+import { Dock } from './components/Dock';
+import { LockScreen } from './components/LockScreen';
+import { OverviewGrid } from './components/OverviewGrid';
+import { SettingsModal } from './components/SettingsModal';
 import type { Category, DashboardConfig, Service } from '@homedock/types';
 
 const API_BASE =
@@ -1011,16 +1015,6 @@ function withTones(categories: Category[]): CategoryWithTone[] {
   });
 }
 
-function buildAutoIconUrl(url?: string | null) {
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    return `${parsed.origin}/favicon.ico`;
-  } catch {
-    return null;
-  }
-}
-
 function splitUrl(raw: string) {
   if (!raw) {
     return { protocol: 'http', rest: '' };
@@ -1190,122 +1184,6 @@ function createId() {
     return crypto.randomUUID();
   }
   return `local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function ServiceIcon({ service, size = 28 }: { service: Service; size?: number }) {
-  const explicitUrl = service.iconUrl?.trim();
-  const namedIcon = service.icon?.trim();
-  const autoUrl =
-    !explicitUrl && !namedIcon ? buildAutoIconUrl(service.url) : null;
-  const [explicitError, setExplicitError] = useState(false);
-  const [autoError, setAutoError] = useState(false);
-
-  useEffect(() => {
-    setExplicitError(false);
-  }, [explicitUrl]);
-
-  useEffect(() => {
-    setAutoError(false);
-  }, [autoUrl]);
-
-  if (explicitUrl && !explicitError) {
-    return (
-      <img
-        src={explicitUrl}
-        alt=""
-        width={size}
-        height={size}
-        onError={() => setExplicitError(true)}
-      />
-    );
-  }
-
-  if (namedIcon) {
-    return <AppIcon name={namedIcon} size={size} />;
-  }
-
-  if (autoUrl && !autoError) {
-    return (
-      <img
-        src={autoUrl}
-        alt=""
-        width={size}
-        height={size}
-        onError={() => setAutoError(true)}
-      />
-    );
-  }
-
-  return <AppIcon name="default" size={size} />;
-}
-
-function IconPicker({
-  value,
-  onChange,
-  placeholder
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState(value);
-
-  useEffect(() => {
-    setQuery(value);
-  }, [value]);
-
-  const options = useMemo(() => {
-    if (!query) {
-      return appIconOptions.slice(0, 18);
-    }
-    const lowered = query.toLowerCase();
-    return appIconOptions
-      .filter((name) => name.includes(lowered))
-      .slice(0, 18);
-  }, [query]);
-
-  const handleSelect = (name: string) => {
-    setQuery(name);
-    onChange(name);
-    setOpen(false);
-  };
-
-  return (
-    <div
-      className="icon-picker"
-      onFocusCapture={() => setOpen(true)}
-      onBlurCapture={() => setOpen(false)}
-    >
-      <input
-        type="text"
-        value={query}
-        onChange={(event) => {
-          const next = event.target.value;
-          setQuery(next);
-          onChange(next);
-          setOpen(true);
-        }}
-        placeholder={placeholder}
-      />
-      {open && options.length > 0 ? (
-        <div className="icon-options">
-          {options.map((name) => (
-            <button
-              key={name}
-              type="button"
-              className="icon-option"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => handleSelect(name)}
-            >
-              <AppIcon name={name} size={18} />
-              <span>{name}</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
 }
 
 export default function HomePage() {
@@ -2288,54 +2166,21 @@ export default function HomePage() {
 
   return (
     <div className="screen">
-      <div
-        ref={lockRef}
-        className={`lock-screen ${unlocked ? 'unlocked' : ''}`}
+      <LockScreen
+        unlocked={unlocked}
+        token={token}
+        timeLabel={timeLabel}
+        dateLabel={dateLabel}
+        t={(key, vars) => t(key as TranslationKey, vars)}
+        lockRef={lockRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
-      >
-        <div className="status-bar">
-          <div className="status-left">
-            {token ? t('loginActive') : t('loginInactive')}
-          </div>
-          <div className="status-right" />
-        </div>
-        <div className="lock-content">
-          <div className="lock-time">{timeLabel}</div>
-          <div className="lock-date">{dateLabel}</div>
-        </div>
-        <button
-          type="button"
-          className="swipe-indicator"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            unlockNow(true);
-          }}
-          onMouseDownCapture={(event) => event.stopPropagation()}
-          onPointerDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            unlockNow(true);
-          }}
-          onPointerDownCapture={(event) => event.stopPropagation()}
-          onTouchStart={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            unlockNow(true);
-          }}
-          onTouchStartCapture={(event) => event.stopPropagation()}
-          onClick={() => unlockNow(true)}
-        >
-          <span>↑</span> {t('lockSwipe')}
-        </button>
-      </div>
+        onUnlock={unlockNow}
+      />
 
       <main
         className={`home-screen ${unlocked ? 'visible' : ''}`}
@@ -2363,73 +2208,17 @@ export default function HomePage() {
             </section>
           ) : null}
 
-          <section className="overview-grid">
-            <div className="glass-card">
-              <h3>{t('systemSummaryCard')}</h3>
-              {systemSummaryOrder.map((key) => {
-                const labelKey = SYSTEM_SUMMARY_OPTIONS.find(
-                  (option) => option.key === key
-                )?.labelKey;
-                const label = labelKey ? t(labelKey as TranslationKey) : key;
-                const value =
-                  systemSummaryValues[key as SystemSummaryKey] ?? '-';
-                return (
-                  <div key={key} className="metric-row">
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="glass-card weather-card">
-              <h3>{t('weatherCard')}</h3>
-              <div className="weather-header">
-                <div className="weather-icon">{weather.icon}</div>
-                <div>
-                  <div className="weather-temp">
-                    {Math.round(weather.temperature)}°C
-                  </div>
-                  <div className="weather-summary">
-                    {weatherSummary} · {weather.location}
-                  </div>
-                  <div className="weather-range">
-                    <span>
-                      {t('labelMinTemp')} {Math.round(weather.minTemp)}°
-                    </span>
-                    <span>
-                      {t('labelMaxTemp')} {Math.round(weather.maxTemp)}°
-                    </span>
-                    <span className="weather-feels">
-                      {t('labelFeelsLike')} {Math.round(weather.feelsLike)}°C
-                    </span>
-                  </div>
-                  <div className="weather-sun">
-                    <span>
-                      {t('labelSunrise')} {weather.sunrise}
-                    </span>
-                    <span>
-                      {t('labelSunset')} {weather.sunset}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="weather-meta">
-                {weatherMetaOrder.map((key) => {
-                  const labelKey = WEATHER_META_OPTIONS.find(
-                    (option) => option.key === key
-                  )?.labelKey;
-                  const label = labelKey ? t(labelKey as TranslationKey) : key;
-                  const value =
-                    weatherMetaValues[key as WeatherMetaKey] ?? '-';
-                  return (
-                    <span key={key}>
-                      {label} {value}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
+          <OverviewGrid
+            t={(key, vars) => t(key as TranslationKey, vars)}
+            systemSummaryOrder={systemSummaryOrder}
+            systemSummaryOptions={SYSTEM_SUMMARY_OPTIONS}
+            systemSummaryValues={systemSummaryValues}
+            weather={weather}
+            weatherSummary={weatherSummary}
+            weatherMetaOrder={weatherMetaOrder}
+            weatherMetaOptions={WEATHER_META_OPTIONS}
+            weatherMetaValues={weatherMetaValues}
+          />
 
           <section className="glass-card search-panel">
             <div>
@@ -2444,870 +2233,84 @@ export default function HomePage() {
             />
           </section>
 
-          <section className="category-grid">
-            {visibleCategories.map((category) => (
-              <div
-                key={category.id}
-                className="category-card"
-                style={
-                  {
-                    '--category-accent': category.tone.accent
-                  } as CSSProperties
-                }
-              >
-                <div className="category-header">
-                  <div className="category-title">
-                    <span className="category-dot" />
-                    <span>{category.name}</span>
-                  </div>
-                  <div className="category-meta">
-                    {t('serviceCount', { count: category.services.length })}
-                  </div>
-                </div>
-                <div className="service-grid">
-                  {category.services.map((service, index) => {
-                    const tooltip = [
-                      service.name,
-                      service.url,
-                      service.description
-                    ]
-                      .filter(Boolean)
-                      .join('\n');
-                    return (
-                      <a
-                        key={service.id}
-                        className="service-card"
-                        data-tooltip={tooltip}
-                        href={service.url}
-                        target={service.target === '_self' ? '_self' : '_blank'}
-                        rel={
-                          service.target === '_self' ? undefined : 'noreferrer'
-                        }
-                        style={{
-                          animationDelay: `${index * 0.08}s`
-                        }}
-                      >
-                        <div className="service-icon">
-                          <ServiceIcon service={service} size={28} />
-                        </div>
-                        <div className="service-name">{service.name}</div>
-                        <div className="service-url">{service.url}</div>
-                        {service.description ? (
-                          <div className="service-desc">
-                            {service.description}
-                          </div>
-                        ) : null}
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </section>
+          <CategoryGrid
+            categories={visibleCategories}
+            t={(key, vars) => t(key as TranslationKey, vars)}
+          />
+
         </div>
 
-        <div className="dock" ref={dockRef}>
-          {dockEntries.map((entry) =>
-            entry.type === 'separator' ? (
-              <span key={entry.id} className="dock-separator" aria-hidden="true" />
-            ) : (
-              <a
-                key={entry.service.id}
-                className="dock-item"
-                href={entry.service.url}
-                target={entry.service.target === '_self' ? '_self' : '_blank'}
-                rel={
-                  entry.service.target === '_self' ? undefined : 'noreferrer'
-                }
-              >
-                <ServiceIcon service={entry.service} size={22} />
-              </a>
-            )
-          )}
-          {dockHiddenFavorites.length > 0 ? (
-            <button
-              ref={dockMoreRef}
-              type="button"
-              className="dock-item dock-more"
-              onClick={() => setDockMenuOpen((prev) => !prev)}
-              aria-label={t('dockMore')}
-              title={t('dockMore')}
-            >
-              …
-            </button>
-          ) : null}
-          <button type="button" className="dock-item" onClick={openSettings}>
-            <AppIcon name="settings" size={22} />
-          </button>
-          {dockHiddenFavorites.length > 0 && dockMenuOpen ? (
-            <div className="dock-menu" ref={dockMenuRef}>
-              {dockHiddenFavorites.map((service) => (
-                <a
-                  key={service.id}
-                  className="dock-menu-item"
-                  href={service.url}
-                  target={service.target === '_self' ? '_self' : '_blank'}
-                  rel={service.target === '_self' ? undefined : 'noreferrer'}
-                >
-                  <ServiceIcon service={service} size={20} />
-                  <span>{service.name}</span>
-                </a>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        <Dock
+          dockEntries={dockEntries}
+          dockHiddenFavorites={dockHiddenFavorites}
+          dockMenuOpen={dockMenuOpen}
+          dockRef={dockRef}
+          dockMenuRef={dockMenuRef}
+          dockMoreRef={dockMoreRef}
+          onToggleMenu={() => setDockMenuOpen((prev) => !prev)}
+          onOpenSettings={openSettings}
+          t={(key, vars) => t(key as TranslationKey, vars)}
+        />
       </main>
 
       {settingsOpen ? (
-        <div className="settings-panel" role="dialog" aria-modal="true">
-          <div className="settings-card">
-            <div className="settings-header">
-              <div>
-                <div className="settings-kicker">{t('settingsKicker')}</div>
-                <h2>{t('settingsTitle')}</h2>
-                <p className="helper-text">{t('settingsSubtitle')}</p>
-              </div>
-              <button
-                type="button"
-                className="button secondary"
-                onClick={() => setSettingsOpen(false)}
-              >
-                {t('close')}
-              </button>
-            </div>
-
-            {!token ? (
-              <form className="settings-auth" onSubmit={handleLogin}>
-                <div className="auth-field">
-                  <label>{t('loginEmail')}</label>
-                  <input
-                    type="email"
-                    value={loginEmail}
-                    onChange={(event) => setLoginEmail(event.target.value)}
-                    placeholder="admin@homedock.local"
-                    required
-                  />
-                </div>
-                <div className="auth-field">
-                  <label>{t('loginPassword')}</label>
-                  <input
-                    type="password"
-                    value={loginPassword}
-                    onChange={(event) => setLoginPassword(event.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-                {loginError ? (
-                  <div className="settings-error">{loginError}</div>
-                ) : null}
-                <div className="auth-actions">
-                  <button className="button" type="submit">
-                    {t('loginButton')}
-                  </button>
-                </div>
-              </form>
-            ) : draftConfig ? (
-              <>
-                <div className="settings-body">
-                <section className="settings-section">
-                  <h3>{t('mainInfo')}</h3>
-                  <div className="settings-grid">
-                    <div className="auth-field">
-                      <label>{t('brandLabel')}</label>
-                      <input
-                        type="text"
-                        value={draftConfig.brandName}
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? { ...prev, brandName: event.target.value }
-                              : prev
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="auth-field">
-                      <label>{t('dashboardTitleLabel')}</label>
-                      <input
-                        type="text"
-                        value={draftConfig.title}
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? { ...prev, title: event.target.value }
-                              : prev
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="auth-field">
-                      <label>{t('dashboardDescLabel')}</label>
-                      <input
-                        type="text"
-                        value={draftConfig.description}
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? { ...prev, description: event.target.value }
-                              : prev
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="settings-row">
-                    <label className="checkbox-pill">
-                      <input
-                        type="checkbox"
-                        checked={
-                          draftConfig.showBrand ?? defaultConfig.showBrand
-                        }
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? { ...prev, showBrand: event.target.checked }
-                              : prev
-                          )
-                        }
-                      />
-                      {t('showBrandLabel')}
-                    </label>
-                    <label className="checkbox-pill">
-                      <input
-                        type="checkbox"
-                        checked={
-                          draftConfig.showTitle ?? defaultConfig.showTitle
-                        }
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? { ...prev, showTitle: event.target.checked }
-                              : prev
-                          )
-                        }
-                      />
-                      {t('showTitleLabel')}
-                    </label>
-                    <label className="checkbox-pill">
-                      <input
-                        type="checkbox"
-                        checked={
-                          draftConfig.showDescription ??
-                          defaultConfig.showDescription
-                        }
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  showDescription: event.target.checked
-                                }
-                              : prev
-                          )
-                        }
-                      />
-                      {t('showDescriptionLabel')}
-                    </label>
-                  </div>
-                </section>
-
-                <section className="settings-section">
-                  <h3>{t('layoutTitle')}</h3>
-                  <div className="settings-grid">
-                    <div className="auth-field">
-                      <label>{t('languageLabel')}</label>
-                      <select
-                        value={draftConfig.language}
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  language: event.target.value as LanguageCode
-                                }
-                              : prev
-                          )
-                        }
-                      >
-                        {LANGUAGE_OPTIONS.map((option) => (
-                          <option key={option.code} value={option.code}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="helper-text">{t('languageHelp')}</span>
-                    </div>
-                    <div className="auth-field">
-                      <label>{t('layoutColumnsLabel')}</label>
-                      <select
-                        value={draftConfig.serviceGridColumnsLg}
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  serviceGridColumnsLg: Number(event.target.value)
-                                }
-                              : prev
-                          )
-                        }
-                      >
-                        {GRID_COLUMN_OPTIONS.map((count) => (
-                          <option key={count} value={count}>
-                            {count}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="helper-text">{t('layoutColumnsHelp')}</span>
-                    </div>
-                  </div>
-                  <div className="settings-row">
-                    <label className="checkbox-pill">
-                      <input
-                        type="checkbox"
-                        checked={
-                          draftConfig.dockSeparatorEnabled ??
-                          defaultConfig.dockSeparatorEnabled
-                        }
-                        onChange={(event) =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  dockSeparatorEnabled: event.target.checked
-                                }
-                              : prev
-                          )
-                        }
-                      />
-                      {t('dockSeparatorLabel')}
-                    </label>
-                    <span className="helper-text">{t('dockSeparatorHelp')}</span>
-                  </div>
-                </section>
-
-                <section className="settings-section">
-                  <div className="section-header">
-                    <h3>{t('themeTitle')}</h3>
-                    <span className="helper-text">{t('themeHelp')}</span>
-                  </div>
-                  <div className="theme-grid">
-                    {THEME_OPTIONS.map((themeOption) => (
-                      <button
-                        key={themeOption.key}
-                        type="button"
-                        className={`theme-card ${
-                          (draftConfig.themeKey ?? defaultConfig.themeKey) ===
-                          themeOption.key
-                            ? 'active'
-                            : ''
-                        }`}
-                        style={{
-                          background: `linear-gradient(135deg, ${themeOption.colors.bgDeep}, ${themeOption.colors.bgSoft})`
-                        }}
-                        onClick={() =>
-                          setDraftConfig((prev) =>
-                            prev
-                              ? { ...prev, themeKey: themeOption.key }
-                              : prev
-                          )
-                        }
-                      >
-                        <div className="theme-swatches">
-                          <span
-                            className="theme-dot"
-                            style={{
-                              background: themeOption.colors.bgDeep
-                            }}
-                          />
-                          <span
-                            className="theme-dot"
-                            style={{
-                              background: themeOption.colors.bgSoft
-                            }}
-                          />
-                          <span
-                            className="theme-dot"
-                            style={{
-                              background: themeOption.colors.accent
-                            }}
-                          />
-                          <span
-                            className="theme-dot"
-                            style={{
-                              background: themeOption.colors.accent2
-                            }}
-                          />
-                        </div>
-                        <div className="theme-name">{themeOption.name}</div>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="settings-section">
-                  <div className="section-header">
-                    <h3>{t('systemSummaryTitle')}</h3>
-                    <span className="helper-text">
-                      {t('systemSummaryHelp', { count: SYSTEM_SUMMARY_MAX })}
-                    </span>
-                  </div>
-                  <div className="option-list">
-                    {selectedSystemSummary.length === 0 ? (
-                      <div className="option-empty">
-                        {t('systemSummaryEmpty')}
-                      </div>
-                    ) : (
-                      selectedSystemSummary.map((key, index) => {
-                        const option = SYSTEM_SUMMARY_OPTIONS.find(
-                          (item) => item.key === key
-                        );
-                        return (
-                          <div key={key} className="option-row">
-                            <span className="option-title">
-                              {option ? t(option.labelKey as TranslationKey) : key}
-                            </span>
-                            <div className="option-actions">
-                              <button
-                                type="button"
-                                onClick={() => moveSystemSummaryKey(index, -1)}
-                                disabled={index === 0}
-                              >
-                                ↑
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveSystemSummaryKey(index, 1)}
-                                disabled={index === selectedSystemSummary.length - 1}
-                              >
-                                ↓
-                              </button>
-                              <button
-                                type="button"
-                                className="danger"
-                                onClick={() => removeSystemSummaryKey(key)}
-                              >
-                                {t('remove')}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                  <div className="option-add-grid">
-                    {availableSystemSummary.map((option) => {
-                      const disabled =
-                        selectedSystemSummary.length >= SYSTEM_SUMMARY_MAX;
-                      return (
-                        <button
-                          key={option.key}
-                          type="button"
-                          className={`option-add ${disabled ? 'disabled' : ''}`}
-                          onClick={() => addSystemSummaryKey(option.key)}
-                          disabled={disabled}
-                        >
-                          + {t(option.labelKey as TranslationKey)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                <section className="settings-section">
-                  <h3>{t('weatherLocationTitle')}</h3>
-                  <div className="settings-row">
-                    <label className="radio-pill">
-                      <input
-                        type="radio"
-                        checked={draftConfig.weatherMode === 'auto'}
-                        onChange={() =>
-                          setDraftConfig((prev) =>
-                            prev ? { ...prev, weatherMode: 'auto' } : prev
-                          )
-                        }
-                      />
-                      {t('weatherAuto')}
-                    </label>
-                    <label className="radio-pill">
-                      <input
-                        type="radio"
-                        checked={draftConfig.weatherMode === 'manual'}
-                        onChange={() =>
-                          setDraftConfig((prev) =>
-                            prev ? { ...prev, weatherMode: 'manual' } : prev
-                          )
-                        }
-                      />
-                      {t('weatherManual')}
-                    </label>
-                  </div>
-                  {draftConfig.weatherMode === 'manual' ? (
-                    <div className="location-picker">
-                      <input
-                        type="text"
-                        value={locationQuery}
-                        onChange={(event) =>
-                          setLocationQuery(event.target.value)
-                        }
-                        placeholder={t('weatherSearchPlaceholder')}
-                      />
-                      {locationOptions.length > 0 ? (
-                        <div className="location-list">
-                          {locationOptions.map((option) => (
-                            <button
-                              key={`${option.name}-${option.latitude}-${option.longitude}`}
-                              type="button"
-                              onClick={() => selectLocation(option)}
-                            >
-                              <span>{option.name}</span>
-                              <span className="helper-text">
-                                {option.region ?? ''}
-                                {option.country ? ` · ${option.country}` : ''}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <p className="helper-text">
-                      {t('weatherAutoHint')}
-                    </p>
-                  )}
-                </section>
-
-                <section className="settings-section">
-                  <div className="section-header">
-                    <h3>{t('weatherMetaTitle')}</h3>
-                    <span className="helper-text">
-                      {t('weatherMetaHelp', { count: WEATHER_META_MAX })}
-                    </span>
-                  </div>
-                  <div className="option-list">
-                    {selectedWeatherMeta.length === 0 ? (
-                      <div className="option-empty">
-                        {t('weatherMetaEmpty')}
-                      </div>
-                    ) : (
-                      selectedWeatherMeta.map((key, index) => {
-                        const option = WEATHER_META_OPTIONS.find(
-                          (item) => item.key === key
-                        );
-                        return (
-                          <div key={key} className="option-row">
-                            <span className="option-title">
-                              {option ? t(option.labelKey as TranslationKey) : key}
-                            </span>
-                            <div className="option-actions">
-                              <button
-                                type="button"
-                                onClick={() => moveWeatherMetaKey(index, -1)}
-                                disabled={index === 0}
-                              >
-                                ↑
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveWeatherMetaKey(index, 1)}
-                                disabled={index === selectedWeatherMeta.length - 1}
-                              >
-                                ↓
-                              </button>
-                              <button
-                                type="button"
-                                className="danger"
-                                onClick={() => removeWeatherMetaKey(key)}
-                              >
-                                {t('remove')}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                  <div className="option-add-grid">
-                    {availableWeatherMeta.map((option) => {
-                      const disabled =
-                        selectedWeatherMeta.length >= WEATHER_META_MAX;
-                      return (
-                        <button
-                          key={option.key}
-                          type="button"
-                          className={`option-add ${disabled ? 'disabled' : ''}`}
-                          onClick={() => addWeatherMetaKey(option.key)}
-                          disabled={disabled}
-                        >
-                          + {t(option.labelKey as TranslationKey)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                <section className="settings-section">
-                  <div className="section-header">
-                    <h3>{t('categoryTitle')}</h3>
-                    <button
-                      type="button"
-                      className="button secondary"
-                      onClick={addCategory}
-                    >
-                      {t('categoryAdd')}
-                    </button>
-                  </div>
-
-                  <div className="category-editor-list">
-                    {draftCategories.map((category, categoryIndex) => (
-                      <div key={category.id} className="category-editor">
-                        <div className="category-editor-head">
-                          <input
-                            type="text"
-                            value={category.name}
-                            onChange={(event) =>
-                              updateCategory(category.id, {
-                                name: event.target.value
-                              })
-                            }
-                          />
-                          <input
-                            type="color"
-                            value={category.color ?? '#7ef5d2'}
-                            onChange={(event) =>
-                              updateCategory(category.id, {
-                                color: event.target.value
-                              })
-                            }
-                          />
-                          <div className="editor-actions">
-                            <button
-                              type="button"
-                              onClick={() => moveCategory(categoryIndex, -1)}
-                            >
-                              ↑
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => moveCategory(categoryIndex, 1)}
-                            >
-                              ↓
-                            </button>
-                            <button
-                              type="button"
-                              className="danger"
-                              onClick={() => removeCategory(category.id)}
-                            >
-                              {t('delete')}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="service-editor-list">
-                          {(category.services ?? []).map((service, serviceIndex) => {
-                            const { protocol, rest } = splitUrl(service.url ?? '');
-
-                            return (
-                              <div key={service.id} className="service-editor">
-                                <div className="service-editor-head">
-                                  <div className="service-preview">
-                                    <ServiceIcon service={service} size={22} />
-                                  </div>
-                                  <input
-                                    type="text"
-                                    value={service.name}
-                                    onChange={(event) =>
-                                      updateService(category.id, service.id, {
-                                        name: event.target.value
-                                      })
-                                    }
-                                  />
-                                  <div className="editor-actions">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        moveService(category.id, serviceIndex, -1)
-                                      }
-                                    >
-                                      ↑
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        moveService(category.id, serviceIndex, 1)
-                                      }
-                                    >
-                                      ↓
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="danger"
-                                      onClick={() =>
-                                        removeService(category.id, service.id)
-                                      }
-                                    >
-                                      {t('delete')}
-                                    </button>
-                                  </div>
-                                </div>
-
-                                <div className="service-editor-hint">
-                                  {t('iconPriorityHint')}
-                                </div>
-                                <div className="service-editor-grid">
-                                  <div className="field">
-                                    <label>{t('iconName')}</label>
-                                    <IconPicker
-                                      value={service.icon ?? ''}
-                                      onChange={(value) =>
-                                        updateService(category.id, service.id, {
-                                          icon: value
-                                        })
-                                      }
-                                      placeholder={t('iconNamePlaceholder')}
-                                    />
-                                  </div>
-                                  <div className="field">
-                                    <label>{t('iconUrl')}</label>
-                                    <input
-                                      type="text"
-                                      value={service.iconUrl ?? ''}
-                                      onChange={(event) =>
-                                        updateService(category.id, service.id, {
-                                          iconUrl: event.target.value
-                                        })
-                                      }
-                                      placeholder="https://.../icon.png"
-                                    />
-                                  </div>
-                                  <div className="field url-field">
-                                    <label>{t('urlLabel')}</label>
-                                    <div className="url-input">
-                                      <select
-                                        value={protocol}
-                                        onChange={(event) =>
-                                          updateService(category.id, service.id, {
-                                            url: buildUrl(event.target.value, rest)
-                                          })
-                                        }
-                                      >
-                                        <option value="http">http://</option>
-                                        <option value="https">https://</option>
-                                      </select>
-                                      <input
-                                        type="text"
-                                        value={rest}
-                                        onChange={(event) =>
-                                          updateService(category.id, service.id, {
-                                            url: buildUrl(protocol, event.target.value)
-                                          })
-                                        }
-                                        placeholder="host:port/path"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="field">
-                                    <label>{t('descriptionLabel')}</label>
-                                    <input
-                                      type="text"
-                                      value={service.description ?? ''}
-                                      onChange={(event) =>
-                                        updateService(category.id, service.id, {
-                                          description: event.target.value
-                                        })
-                                      }
-                                      placeholder={t('serviceDescPlaceholder')}
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="service-editor-options">
-                                  <label className="checkbox-pill">
-                                    <input
-                                      type="checkbox"
-                                      checked={Boolean(service.isFavorite)}
-                                      onChange={(event) =>
-                                        updateService(category.id, service.id, {
-                                          isFavorite: event.target.checked
-                                        })
-                                      }
-                                    />
-                                    {t('favoriteLabel')}
-                                  </label>
-                                  <label className="checkbox-pill">
-                                    <input
-                                      type="checkbox"
-                                      checked={Boolean(service.requiresAuth)}
-                                      onChange={(event) =>
-                                        updateService(category.id, service.id, {
-                                          requiresAuth: event.target.checked
-                                        })
-                                      }
-                                    />
-                                    {t('authRequiredLabel')}
-                                  </label>
-                                  <div className="field inline">
-                                    <label>{t('targetLabel')}</label>
-                                    <select
-                                      value={service.target ?? '_blank'}
-                                      onChange={(event) =>
-                                        updateService(category.id, service.id, {
-                                          target: event.target.value
-                                        })
-                                      }
-                                    >
-                                      <option value="_self">{t('targetSelf')}</option>
-                                      <option value="_blank">{t('targetBlank')}</option>
-                                      <option value="window">{t('targetWindow')}</option>
-                                    </select>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                          <button
-                            type="button"
-                            className="button ghost"
-                            onClick={() => addService(category.id)}
-                          >
-                            {t('serviceAdd')}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                </div>
-                <div className="settings-footer">
-                  {loginError ? (
-                    <div className="settings-error">{loginError}</div>
-                  ) : null}
-                  <div className="settings-actions">
-                    <button
-                      type="button"
-                      className="button secondary"
-                      onClick={() => setToken(null)}
-                    >
-                      {t('logout')}
-                    </button>
-                    <button
-                      type="button"
-                      className="button"
-                      disabled={saving}
-                      onClick={handleSave}
-                    >
-                      {saving ? t('saving') : t('saveChanges')}
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="settings-loading">{t('loadingSettings')}</div>
-            )}
-          </div>
-        </div>
+        <SettingsModal
+          t={(key, vars) => t(key as TranslationKey, vars)}
+          token={token}
+          loginEmail={loginEmail}
+          loginPassword={loginPassword}
+          loginError={loginError}
+          saving={saving}
+          draftConfig={draftConfig}
+          draftCategories={draftCategories}
+          defaultConfig={defaultConfig}
+          languageOptions={LANGUAGE_OPTIONS}
+          gridColumnOptions={GRID_COLUMN_OPTIONS}
+          themeOptions={THEME_OPTIONS}
+          systemSummaryOptions={SYSTEM_SUMMARY_OPTIONS}
+          weatherMetaOptions={WEATHER_META_OPTIONS}
+          selectedSystemSummary={selectedSystemSummary}
+          availableSystemSummary={availableSystemSummary}
+          selectedWeatherMeta={selectedWeatherMeta}
+          availableWeatherMeta={availableWeatherMeta}
+          systemSummaryMax={SYSTEM_SUMMARY_MAX}
+          weatherMetaMax={WEATHER_META_MAX}
+          locationQuery={locationQuery}
+          locationOptions={locationOptions}
+          onClose={() => setSettingsOpen(false)}
+          onLoginSubmit={handleLogin}
+          onLoginEmailChange={setLoginEmail}
+          onLoginPasswordChange={setLoginPassword}
+          onLogout={() => setToken(null)}
+          onSave={handleSave}
+          setDraftConfig={setDraftConfig}
+          onLocationQueryChange={setLocationQuery}
+          onLocationSelect={selectLocation}
+          addSystemSummaryKey={(key) =>
+            addSystemSummaryKey(key as SystemSummaryKey)
+          }
+          moveSystemSummaryKey={moveSystemSummaryKey}
+          removeSystemSummaryKey={(key) =>
+            removeSystemSummaryKey(key as SystemSummaryKey)
+          }
+          addWeatherMetaKey={(key) =>
+            addWeatherMetaKey(key as WeatherMetaKey)
+          }
+          moveWeatherMetaKey={moveWeatherMetaKey}
+          removeWeatherMetaKey={(key) =>
+            removeWeatherMetaKey(key as WeatherMetaKey)
+          }
+          addCategory={addCategory}
+          updateCategory={updateCategory}
+          moveCategory={moveCategory}
+          removeCategory={removeCategory}
+          addService={addService}
+          updateService={updateService}
+          moveService={moveService}
+          removeService={removeService}
+          splitUrl={splitUrl}
+          buildUrl={buildUrl}
+        />
       ) : null}
     </div>
   );
