@@ -7,6 +7,7 @@ import { Dock } from './components/Dock';
 import { LockScreen } from './components/LockScreen';
 import { OverviewGrid } from './components/OverviewGrid';
 import { SettingsModal } from './components/SettingsModal';
+import { createId, formatDate, formatTime } from './lib/dashboard-utils';
 import type { Category, DashboardConfig, Service } from '@homedock/types';
 
 const API_BASE =
@@ -968,22 +969,6 @@ const fallbackCategories: Category[] = [
   }
 ];
 
-function formatTime(now: Date, locale: string) {
-  return now.toLocaleTimeString(locale, {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-}
-
-function formatDate(now: Date, locale: string) {
-  return now.toLocaleDateString(locale, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric'
-  });
-}
-
 function hexToRgb(hex: string) {
   const cleaned = hex.replace('#', '').trim();
   if (cleaned.length !== 6) return null;
@@ -1013,32 +998,6 @@ function withTones(categories: Category[]): CategoryWithTone[] {
       tone: { accent, glow }
     };
   });
-}
-
-function splitUrl(raw: string) {
-  if (!raw) {
-    return { protocol: 'http', rest: '' };
-  }
-
-  const trimmed = raw.trim();
-  const match = trimmed.match(
-    /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/(.*)$/
-  );
-  if (match) {
-    return { protocol: match[1].toLowerCase(), rest: match[2] };
-  }
-  return { protocol: 'http', rest: trimmed };
-}
-
-function buildUrl(protocol: string, rest: string) {
-  const normalizedProtocol = protocol === 'https' ? 'https' : 'http';
-  const trimmed = rest
-    .trim()
-    .replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/{2}/, '');
-  if (!trimmed) {
-    return `${normalizedProtocol}://`;
-  }
-  return `${normalizedProtocol}://${trimmed}`;
 }
 
 function weatherSummaryKeyFromCode(code?: number): TranslationKey {
@@ -1179,17 +1138,11 @@ function normalizeConfig(input: DashboardConfig) {
   return next;
 }
 
-function createId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return `local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
 export default function HomePage() {
   const [unlocked, setUnlocked] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [config, setConfig] = useState<DashboardConfig>(defaultConfig);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [query, setQuery] = useState('');
@@ -1314,8 +1267,20 @@ export default function HomePage() {
   }, [unlocked]);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem('homedock_token');
-    setToken(stored);
+    const checkSession = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/auth/me`, {
+          credentials: 'include'
+        });
+        setIsAuthenticated(response.ok);
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setAuthChecked(true);
+      }
+    };
+
+    void checkSession();
   }, []);
 
 
@@ -1341,13 +1306,9 @@ export default function HomePage() {
   }, [dockMenuOpen]);
 
   useEffect(() => {
-    if (token) {
-      window.localStorage.setItem('homedock_token', token);
-    } else {
-      window.localStorage.removeItem('homedock_token');
-    }
-    void loadDashboard(token);
-  }, [token]);
+    if (!authChecked) return;
+    void loadDashboard(isAuthenticated);
+  }, [authChecked, isAuthenticated]);
 
   useEffect(() => {
     const loadWeather = async () => {
@@ -1455,17 +1416,15 @@ export default function HomePage() {
     return () => clearTimeout(handle);
   }, [locationQuery, settingsOpen, draftConfig]);
 
-  const loadDashboard = async (authToken?: string | null) => {
+  const loadDashboard = async (useAdmin: boolean) => {
     try {
-      const headers: Record<string, string> = {};
-      const url = authToken ? `${API_BASE}/dashboard/admin` : `${API_BASE}/dashboard`;
-      if (authToken) {
-        headers.Authorization = `Bearer ${authToken}`;
-      }
+      const url = useAdmin
+        ? `${API_BASE}/dashboard/admin`
+        : `${API_BASE}/dashboard`;
 
-      const response = await fetch(url, { headers });
-      if (response.status === 401) {
-        setToken(null);
+      const response = await fetch(url, { credentials: 'include' });
+      if (response.status === 401 && useAdmin) {
+        setIsAuthenticated(false);
         return;
       }
       if (!response.ok) {
@@ -1486,13 +1445,13 @@ export default function HomePage() {
     }
   };
 
-  const loadAdminDashboard = async (authToken: string) => {
+  const loadAdminDashboard = async () => {
     try {
       const response = await fetch(`${API_BASE}/dashboard/admin`, {
-        headers: { Authorization: `Bearer ${authToken}` }
+        credentials: 'include'
       });
       if (response.status === 401) {
-        setToken(null);
+        setIsAuthenticated(false);
         setLoginError(t('errorSessionExpired'));
         return;
       }
@@ -1615,7 +1574,7 @@ export default function HomePage() {
   const tonedCategories = useMemo(() => withTones(categories), [categories]);
 
   const visibleCategories = useMemo(() => {
-    const list = token
+    const list = isAuthenticated
       ? tonedCategories
       : tonedCategories.map((category) => ({
           ...category,
@@ -1639,7 +1598,7 @@ export default function HomePage() {
         )
       }))
       .filter((category) => category.services.length > 0);
-  }, [query, tonedCategories, token]);
+  }, [query, tonedCategories, isAuthenticated]);
 
   const showBrand = config.showBrand ?? defaultConfig.showBrand;
   const showTitle = config.showTitle ?? defaultConfig.showTitle;
@@ -1794,7 +1753,9 @@ export default function HomePage() {
       ),
     [config.weatherMetaOrder]
   );
-  const authStatusLabel = token ? t('loginActive') : t('loginInactive');
+  const authStatusLabel = isAuthenticated
+    ? t('loginActive')
+    : t('loginInactive');
 
   const systemSummaryValues = useMemo<Record<SystemSummaryKey, string>>(
     () => ({
@@ -1837,8 +1798,8 @@ export default function HomePage() {
 
   const openSettings = () => {
     setSettingsOpen(true);
-    if (token) {
-      void loadAdminDashboard(token);
+    if (isAuthenticated) {
+      void loadAdminDashboard();
     } else {
       setDraftConfig(null);
       setDraftCategories([]);
@@ -1853,6 +1814,7 @@ export default function HomePage() {
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: loginEmail, password: loginPassword })
       });
 
@@ -1861,20 +1823,24 @@ export default function HomePage() {
         return;
       }
 
-      const data = (await response.json()) as {
-        accessToken?: string;
-      };
-
-      if (!data.accessToken) {
-        setLoginError(t('errorTokenMissing'));
-        return;
-      }
-
-      setToken(data.accessToken);
-      await loadAdminDashboard(data.accessToken);
+      setIsAuthenticated(true);
+      await loadAdminDashboard();
     } catch {
       setLoginError(t('errorLoginFailed'));
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch {
+      // Ignore logout failures; clear local state either way.
+    }
+    setIsAuthenticated(false);
+    setLoginError(null);
   };
 
   const updateCategory = (categoryId: string, patch: Partial<Category>) => {
@@ -2075,7 +2041,7 @@ export default function HomePage() {
   };
 
   const handleSave = async () => {
-    if (!token || !draftConfig) return;
+    if (!isAuthenticated || !draftConfig) return;
     setSaving(true);
 
     const normalizedCategories = draftCategories.map((category, index) => ({
@@ -2090,10 +2056,8 @@ export default function HomePage() {
     try {
       const response = await fetch(`${API_BASE}/dashboard/admin`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           config: {
             brandName: draftConfig.brandName,
@@ -2168,7 +2132,7 @@ export default function HomePage() {
     <div className="screen">
       <LockScreen
         unlocked={unlocked}
-        token={token}
+        isAuthenticated={isAuthenticated}
         timeLabel={timeLabel}
         dateLabel={dateLabel}
         t={(key, vars) => t(key as TranslationKey, vars)}
@@ -2256,7 +2220,7 @@ export default function HomePage() {
       {settingsOpen ? (
         <SettingsModal
           t={(key, vars) => t(key as TranslationKey, vars)}
-          token={token}
+          isAuthenticated={isAuthenticated}
           loginEmail={loginEmail}
           loginPassword={loginPassword}
           loginError={loginError}
@@ -2281,7 +2245,7 @@ export default function HomePage() {
           onLoginSubmit={handleLogin}
           onLoginEmailChange={setLoginEmail}
           onLoginPasswordChange={setLoginPassword}
-          onLogout={() => setToken(null)}
+          onLogout={handleLogout}
           onSave={handleSave}
           setDraftConfig={setDraftConfig}
           onLocationQueryChange={setLocationQuery}
@@ -2308,8 +2272,6 @@ export default function HomePage() {
           updateService={updateService}
           moveService={moveService}
           removeService={removeService}
-          splitUrl={splitUrl}
-          buildUrl={buildUrl}
         />
       ) : null}
     </div>

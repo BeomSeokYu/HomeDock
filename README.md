@@ -75,7 +75,8 @@ guidelines, see CODE_OF_CONDUCT.md. Security issues should be reported via
 SECURITY.md.
 
 ## API Endpoints
-- `POST /api/auth/login` -> JWT access token
+- `POST /api/auth/login` -> set auth cookie + user payload
+- `POST /api/auth/logout` -> clear auth cookie
 - `GET /api/auth/me` -> current user
 - `GET /api/dashboard` -> public dashboard data
 - `GET /api/dashboard/admin` -> admin dashboard data (auth)
@@ -88,6 +89,9 @@ SECURITY.md.
 - Admin credentials are synced from `.env` on API boot (email + password updates).
 - API container applies migrations on startup when `prisma/migrations` exist.
 - `NEXT_PUBLIC_API_BASE_URL` is baked into the web build; rebuild when it changes.
+- Admin auth uses an HttpOnly cookie (default `SameSite=Lax`). If web and API
+  run on different domains, set `COOKIE_SAME_SITE=none` and
+  `COOKIE_SECURE=true`, and add CSRF protection.
 - Dynamic OG/icon routes use the Next.js edge runtime; build warnings about edge
   runtime are expected when those routes are enabled.
 

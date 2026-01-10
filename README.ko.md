@@ -68,7 +68,8 @@ pnpm dev:api
 기본 포트: 웹 `:3000`, API `:4000`.
 
 ## API 엔드포인트
-- `POST /api/auth/login` -> JWT 발급
+- `POST /api/auth/login` -> 로그인 쿠키 설정 + 사용자 반환
+- `POST /api/auth/logout` -> 인증 쿠키 삭제
 - `GET /api/auth/me` -> 현재 사용자
 - `GET /api/dashboard` -> 공개 대시보드 데이터
 - `GET /api/dashboard/admin` -> 관리자 대시보드 데이터 (인증 필요)
@@ -81,6 +82,9 @@ pnpm dev:api
 - 관리자 계정은 API 부팅 시 `.env` 값으로 동기화됩니다 (이메일/비밀번호 변경 반영).
 - API 컨테이너는 `prisma/migrations`가 있으면 시작 시 마이그레이션을 적용합니다.
 - `NEXT_PUBLIC_API_BASE_URL`은 웹 빌드에 포함되므로 변경 시 웹 재빌드가 필요합니다.
+- 관리자 인증은 HttpOnly 쿠키를 사용합니다(기본 `SameSite=Lax`). 웹과 API가
+  다른 도메인이라면 `COOKIE_SAME_SITE=none`, `COOKIE_SECURE=true`로 설정하고
+  CSRF 방어를 함께 적용하세요.
 - Dynamic OG/icon routes use the Next.js edge runtime; build warnings about edge
   runtime are expected when those routes are enabled.
 

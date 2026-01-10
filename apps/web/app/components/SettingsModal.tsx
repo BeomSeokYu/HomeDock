@@ -2,6 +2,7 @@ import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import type { Category, DashboardConfig, Service } from '@homedock/types';
 import { IconPicker } from './IconPicker';
 import { ServiceIcon } from './ServiceIcon';
+import { buildUrl, splitUrl } from '../lib/dashboard-utils';
 
 type ThemeOption = {
   key: string;
@@ -29,7 +30,7 @@ type LocationOption = {
 
 type SettingsModalProps = {
   t: (key: string, vars?: Record<string, string | number>) => string;
-  token: string | null;
+  isAuthenticated: boolean;
   loginEmail: string;
   loginPassword: string;
   loginError: string | null;
@@ -77,13 +78,11 @@ type SettingsModalProps = {
   ) => void;
   moveService: (categoryId: string, serviceIndex: number, direction: number) => void;
   removeService: (categoryId: string, serviceId: string) => void;
-  splitUrl: (raw: string) => { protocol: string; rest: string };
-  buildUrl: (protocol: string, rest: string) => string;
 };
 
 export function SettingsModal({
   t,
-  token,
+  isAuthenticated,
   loginEmail,
   loginPassword,
   loginError,
@@ -126,9 +125,7 @@ export function SettingsModal({
   addService,
   updateService,
   moveService,
-  removeService,
-  splitUrl,
-  buildUrl
+  removeService
 }: SettingsModalProps) {
   const passwordPlaceholder = '\u2022'.repeat(8);
 
@@ -150,7 +147,7 @@ export function SettingsModal({
           </button>
         </div>
 
-        {!token ? (
+        {!isAuthenticated ? (
           <form className="settings-auth" onSubmit={onLoginSubmit}>
             <div className="auth-field">
               <label>{t('loginEmail')}</label>
