@@ -20,7 +20,7 @@ It is a Next.js + NestJS monorepo with a SQLite-backed configuration, designed f
 ![Settings categories](docs/screenshots/settings-services.png)
 
 ## Requirements
-- Node.js 18+
+- Node.js 20+
 - pnpm 9+ (via Corepack)
 - Docker (optional, for Compose deployment)
 
@@ -69,6 +69,11 @@ pnpm dev:api
 
 Default ports: web `:3000`, API `:4000`.
 
+## Contributing
+Please read CONTRIBUTING.md before opening issues or pull requests. For community
+guidelines, see CODE_OF_CONDUCT.md. Security issues should be reported via
+SECURITY.md.
+
 ## API Endpoints
 - `POST /api/auth/login` -> JWT access token
 - `GET /api/auth/me` -> current user
@@ -83,6 +88,8 @@ Default ports: web `:3000`, API `:4000`.
 - Admin credentials are synced from `.env` on API boot (email + password updates).
 - API container applies migrations on startup when `prisma/migrations` exist.
 - `NEXT_PUBLIC_API_BASE_URL` is baked into the web build; rebuild when it changes.
+- Dynamic OG/icon routes use the Next.js edge runtime; build warnings about edge
+  runtime are expected when those routes are enabled.
 
 ## Assets & Previews
 Brand assets (favicon, app icons, OG preview) are generated from SVG templates.

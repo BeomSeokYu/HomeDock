@@ -18,7 +18,7 @@ Next.js + NestJS 모노레포 구성이며 SQLite 기반 설정을 사용하고,
 ![카테고리/아이템 설정](docs/screenshots/settings-services.png)
 
 ## 요구 사항
-- Node.js 18+
+- Node.js 20+
 - pnpm 9+ (Corepack 사용)
 - Docker (선택, Compose 배포용)
 
@@ -81,6 +81,8 @@ pnpm dev:api
 - 관리자 계정은 API 부팅 시 `.env` 값으로 동기화됩니다 (이메일/비밀번호 변경 반영).
 - API 컨테이너는 `prisma/migrations`가 있으면 시작 시 마이그레이션을 적용합니다.
 - `NEXT_PUBLIC_API_BASE_URL`은 웹 빌드에 포함되므로 변경 시 웹 재빌드가 필요합니다.
+- Dynamic OG/icon routes use the Next.js edge runtime; build warnings about edge
+  runtime are expected when those routes are enabled.
 
 ## 에셋 & 미리보기
 파비콘/앱 아이콘/미리보기 이미지는 SVG 템플릿에서 생성합니다.
