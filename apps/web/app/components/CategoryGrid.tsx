@@ -1,16 +1,6 @@
 import type { CSSProperties } from 'react';
-import type { Category, Service } from '@homedock/types';
+import type { CategoryWithTone } from '../lib/category-utils';
 import { ServiceIcon } from './ServiceIcon';
-
-type CategoryTone = {
-  accent: string;
-  glow: string;
-};
-
-type CategoryWithTone = Category & {
-  services: Service[];
-  tone: CategoryTone;
-};
 
 type CategoryGridProps = {
   categories: ReadonlyArray<CategoryWithTone>;

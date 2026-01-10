@@ -8,17 +8,12 @@ import { LockScreen } from './components/LockScreen';
 import { OverviewGrid } from './components/OverviewGrid';
 import { SettingsModal } from './components/SettingsModal';
 import { createId, formatDate, formatTime } from './lib/dashboard-utils';
+import { CATEGORY_TONES, withTones } from './lib/category-utils';
 import type { Category, DashboardConfig, Service } from '@homedock/types';
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
 
-const categoryTones = [
-  { accent: '#7ef5d2', glow: 'rgba(126, 245, 210, 0.35)' },
-  { accent: '#ffb86b', glow: 'rgba(255, 184, 107, 0.35)' },
-  { accent: '#8ab6ff', glow: 'rgba(138, 182, 255, 0.35)' },
-  { accent: '#ff8bcf', glow: 'rgba(255, 139, 207, 0.35)' }
-];
 
 const defaultConfig = {
   id: 'default',
@@ -727,11 +722,6 @@ const WEATHER_META_KEYS = WEATHER_META_OPTIONS.map(
 
 const IDLE_LOCK_TIMEOUT_MS = 600000;
 
-type CategoryWithTone = Category & {
-  tone: { accent: string; glow: string };
-  services: Service[];
-};
-
 type DockService = Service & {
   dockCategoryId: string;
   dockCategoryName: string;
@@ -775,7 +765,7 @@ const fallbackCategories: Category[] = [
   {
     id: 'media',
     name: '미디어 존',
-    color: categoryTones[0].accent,
+    color: CATEGORY_TONES[0].accent,
     sortOrder: 0,
     services: [
       {
@@ -824,7 +814,7 @@ const fallbackCategories: Category[] = [
   {
     id: 'infra',
     name: '인프라 컨트롤',
-    color: categoryTones[1].accent,
+    color: CATEGORY_TONES[1].accent,
     sortOrder: 1,
     services: [
       {
@@ -873,7 +863,7 @@ const fallbackCategories: Category[] = [
   {
     id: 'storage',
     name: '스토리지 볼트',
-    color: categoryTones[2].accent,
+    color: CATEGORY_TONES[2].accent,
     sortOrder: 2,
     services: [
       {
@@ -922,7 +912,7 @@ const fallbackCategories: Category[] = [
   {
     id: 'tools',
     name: '툴박스',
-    color: categoryTones[3].accent,
+    color: CATEGORY_TONES[3].accent,
     sortOrder: 3,
     services: [
       {
@@ -968,37 +958,6 @@ const fallbackCategories: Category[] = [
     ]
   }
 ];
-
-function hexToRgb(hex: string) {
-  const cleaned = hex.replace('#', '').trim();
-  if (cleaned.length !== 6) return null;
-  const value = Number.parseInt(cleaned, 16);
-  return {
-    r: (value >> 16) & 255,
-    g: (value >> 8) & 255,
-    b: value & 255
-  };
-}
-
-function toGlow(hex: string) {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return null;
-  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`;
-}
-
-function withTones(categories: Category[]): CategoryWithTone[] {
-  return categories.map((category, index) => {
-    const fallback = categoryTones[index % categoryTones.length];
-    const accent = category.color ?? fallback.accent;
-    const glow = toGlow(accent) ?? fallback.glow;
-
-    return {
-      ...category,
-      services: category.services ?? [],
-      tone: { accent, glow }
-    };
-  });
-}
 
 function weatherSummaryKeyFromCode(code?: number): TranslationKey {
   if (code === 0) {
@@ -1873,7 +1832,7 @@ export default function HomePage() {
     const next: Category = {
       id: createId(),
       name: t('newCategory'),
-      color: categoryTones[0].accent,
+      color: CATEGORY_TONES[0].accent,
       sortOrder: draftCategories.length,
       services: []
     };

@@ -2,7 +2,7 @@ import type { PointerEvent, RefObject, TouchEvent } from 'react';
 
 type LockScreenProps = {
   unlocked: boolean;
-  token: string | null;
+  isAuthenticated: boolean;
   timeLabel: string;
   dateLabel: string;
   t: (key: string, vars?: Record<string, string | number>) => string;
@@ -18,7 +18,7 @@ type LockScreenProps = {
 
 export function LockScreen({
   unlocked,
-  token,
+  isAuthenticated,
   timeLabel,
   dateLabel,
   t,
@@ -46,7 +46,7 @@ export function LockScreen({
     >
       <div className="status-bar">
         <div className="status-left">
-          {token ? t('loginActive') : t('loginInactive')}
+          {isAuthenticated ? t('loginActive') : t('loginInactive')}
         </div>
         <div className="status-right" />
       </div>
