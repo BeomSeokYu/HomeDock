@@ -17,6 +17,8 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm test
       - run: pnpm --filter @homedock/api build
         env:
           DATABASE_URL: file:./dev.db

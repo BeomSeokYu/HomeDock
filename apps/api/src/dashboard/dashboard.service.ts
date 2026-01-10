@@ -232,10 +232,6 @@ export class DashboardService {
     categoryId: string,
     services: DashboardServiceItemInput[]
   ) {
-    const existingServices = await this.prisma.service.findMany({
-      where: { categoryId }
-    });
-
     const incomingServiceIds = services
       .map((service) => service.id)
       .filter((id): id is string => Boolean(id));

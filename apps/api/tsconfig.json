@@ -10,7 +10,7 @@
     "target": "ES2021",
     "sourceMap": true,
     "strict": true,
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*"]
 }

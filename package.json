@@ -8,6 +8,7 @@
     "dev:api": "pnpm --filter @homedock/api dev",
     "build": "pnpm --filter @homedock/web build && pnpm --filter @homedock/api build",
     "lint": "pnpm --filter @homedock/web lint && pnpm --filter @homedock/api lint",
+    "test": "pnpm --filter @homedock/api test",
     "assets:generate": "node scripts/generate-assets.mjs",
     "db:migrate": "pnpm --filter @homedock/api db:migrate",
     "db:generate": "pnpm --filter @homedock/api db:generate"
