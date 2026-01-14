@@ -64,7 +64,7 @@ export default function OpenGraphImage() {
           </div>
         </div>
 
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 44, fontWeight: 600 }}>
             HomeDock Main Dashboard
           </div>
@@ -80,7 +80,9 @@ export default function OpenGraphImage() {
               background: '#121B29',
               borderRadius: 24,
               border: '1px solid #1E2A3D',
-              padding: 24
+              padding: 24,
+              display: 'flex',
+              flexDirection: 'column'
             }}
           >
             <div style={{ fontSize: 20, marginBottom: 12 }}>
@@ -107,7 +109,9 @@ export default function OpenGraphImage() {
               background: '#121B29',
               borderRadius: 24,
               border: '1px solid #1E2A3D',
-              padding: 24
+              padding: 24,
+              display: 'flex',
+              flexDirection: 'column'
             }}
           >
             <div style={{ fontSize: 20, marginBottom: 12 }}>
@@ -128,7 +132,13 @@ export default function OpenGraphImage() {
               >
                 22°
               </div>
-              <div>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6
+                }}
+              >
                 <div style={{ fontSize: 18 }}>Clear</div>
                 <div style={{ fontSize: 16, color: '#A8B5C9', marginTop: 6 }}>
                   Seoul · 06:52 / 19:38
