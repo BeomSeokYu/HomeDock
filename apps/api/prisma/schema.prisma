@@ -19,11 +19,13 @@ model User {
 model Dashboard {
   id                String   @id @default(uuid())
   brandName         String   @default("HomeDock")
+  tabTitle          String?
   language          String   @default("ko")
   serviceGridColumnsLg Int   @default(4)
   showBrand         Boolean  @default(true)
   showTitle         Boolean  @default(true)
   showDescription   Boolean  @default(true)
+  showLockScreen    Boolean  @default(true)
   dockSeparatorEnabled Boolean @default(true)
   themeKey          String   @default("homedock")
   title             String   @default("HomeDock 메인 대시보드")

@@ -1,10 +1,12 @@
 export const DEFAULT_DASHBOARD_CONFIG = {
   brandName: 'HomeDock',
+  tabTitle: 'HomeDock',
   language: 'ko' as const,
   serviceGridColumnsLg: 4,
   showBrand: true,
   showTitle: true,
   showDescription: true,
+  showLockScreen: true,
   dockSeparatorEnabled: true,
   themeKey: 'homedock',
   title: 'HomeDock 메인 대시보드',

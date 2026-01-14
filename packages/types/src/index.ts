@@ -26,11 +26,13 @@ export type Category = {
 export type DashboardConfig = {
   id: string;
   brandName: string;
+  tabTitle?: string;
   language: 'ko' | 'en' | 'ja' | 'zh';
   serviceGridColumnsLg: number;
   showBrand?: boolean;
   showTitle?: boolean;
   showDescription?: boolean;
+  showLockScreen?: boolean;
   dockSeparatorEnabled?: boolean;
   themeKey?: string;
   title: string;

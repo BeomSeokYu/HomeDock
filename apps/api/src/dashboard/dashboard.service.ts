@@ -8,11 +8,13 @@ import {
 
 type DashboardConfigInput = {
   brandName?: string;
+  tabTitle?: string;
   language?: 'ko' | 'en' | 'ja' | 'zh';
   serviceGridColumnsLg?: number;
   showBrand?: boolean;
   showTitle?: boolean;
   showDescription?: boolean;
+  showLockScreen?: boolean;
   dockSeparatorEnabled?: boolean;
   themeKey?: string;
   title?: string;
@@ -149,12 +151,14 @@ export class DashboardService {
       where: { id: dashboard.id },
       data: {
         brandName: config.brandName ?? dashboard.brandName,
+        tabTitle: config.tabTitle ?? dashboard.tabTitle,
         language: config.language ?? dashboard.language,
         serviceGridColumnsLg:
           config.serviceGridColumnsLg ?? dashboard.serviceGridColumnsLg,
         showBrand: config.showBrand ?? dashboard.showBrand,
         showTitle: config.showTitle ?? dashboard.showTitle,
         showDescription: config.showDescription ?? dashboard.showDescription,
+        showLockScreen: config.showLockScreen ?? dashboard.showLockScreen,
         dockSeparatorEnabled:
           config.dockSeparatorEnabled ?? dashboard.dockSeparatorEnabled,
         themeKey: config.themeKey ?? dashboard.themeKey,
