@@ -14,15 +14,20 @@ import type { Category, DashboardConfig, Service } from '@homedock/types';
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
 
+const LOCK_SCREEN_STORAGE_KEY = 'homedock_lock_screen';
+const DASHBOARD_CACHE_KEY = 'homedock_dashboard_cache';
+const DASHBOARD_CACHE_VERSION = 1;
 
 const defaultConfig = {
   id: 'default',
   brandName: 'HomeDock',
+  tabTitle: 'HomeDock',
   language: 'ko',
   serviceGridColumnsLg: 4,
   showBrand: true,
   showTitle: true,
   showDescription: true,
+  showLockScreen: true,
   dockSeparatorEnabled: true,
   themeKey: 'homedock',
   title: 'HomeDock 메인 대시보드',
@@ -43,6 +48,12 @@ const defaultConfig = {
     'windSpeed'
   ]
 } satisfies DashboardConfig;
+
+type DashboardCache = {
+  version: number;
+  config: DashboardConfig;
+  categories: Category[];
+};
 
 const SYSTEM_SUMMARY_MAX = 4;
 const WEATHER_META_MAX = 5;
@@ -236,6 +247,7 @@ const TRANSLATIONS = {
     loginButton: '로그인 후 편집',
     close: '닫기',
     loadingSettings: '설정을 불러오는 중...',
+    loadingDashboard: '대시보드를 불러오는 중...',
     errorSessionExpired: '세션이 만료되었습니다. 다시 로그인하세요.',
     errorInvalidCredentials: '이메일 또는 비밀번호를 확인해 주세요.',
     errorTokenMissing: '로그인 토큰을 받지 못했습니다.',
@@ -246,6 +258,8 @@ const TRANSLATIONS = {
     saving: '저장 중...',
     mainInfo: '메인 정보',
     brandLabel: '헤더 브랜드',
+    tabTitleLabel: '탭 제목',
+    tabTitleHelp: '브라우저 탭 제목으로 표시됩니다.',
     dashboardTitleLabel: '대시보드 타이틀',
     dashboardDescLabel: '한 줄 설명',
     mainInfoVisibility: '메인 정보 표시',
@@ -259,6 +273,8 @@ const TRANSLATIONS = {
     layoutColumnsHelp: '카테고리 카드의 서비스 그리드 기준',
     dockSeparatorLabel: 'Dock 구분선 표시',
     dockSeparatorHelp: '카테고리 사이에 구분선을 표시합니다.',
+    lockScreenLabel: '잠금 화면 표시',
+    lockScreenHelp: '첫 화면에 잠금 화면을 표시합니다.',
     themeTitle: '테마',
     themeHelp: '브라우저에 저장되어 자동 적용됩니다.',
     systemSummaryTitle: '시스템 요약 카드',
@@ -351,6 +367,7 @@ const TRANSLATIONS = {
     loginButton: 'Sign in to edit',
     close: 'Close',
     loadingSettings: 'Loading settings...',
+    loadingDashboard: 'Loading dashboard...',
     errorSessionExpired: 'Session expired. Please sign in again.',
     errorInvalidCredentials: 'Check email or password.',
     errorTokenMissing: 'No login token received.',
@@ -361,6 +378,8 @@ const TRANSLATIONS = {
     saving: 'Saving...',
     mainInfo: 'Main info',
     brandLabel: 'Header brand',
+    tabTitleLabel: 'Tab title',
+    tabTitleHelp: 'Shown in the browser tab.',
     dashboardTitleLabel: 'Dashboard title',
     dashboardDescLabel: 'Tagline',
     mainInfoVisibility: 'Main info visibility',
@@ -374,6 +393,8 @@ const TRANSLATIONS = {
     layoutColumnsHelp: 'Service grid in category cards',
     dockSeparatorLabel: 'Show dock separators',
     dockSeparatorHelp: 'Show dividers between categories.',
+    lockScreenLabel: 'Show lock screen',
+    lockScreenHelp: 'Show the lock screen on first load.',
     themeTitle: 'Theme',
     themeHelp: 'Saved in your browser and applied automatically.',
     systemSummaryTitle: 'System summary',
@@ -466,6 +487,7 @@ const TRANSLATIONS = {
     loginButton: 'ログインして編集',
     close: '閉じる',
     loadingSettings: '設定を読み込み中...',
+    loadingDashboard: 'ダッシュボードを読み込み中...',
     errorSessionExpired: 'セッションが切れました。再度ログインしてください。',
     errorInvalidCredentials: 'メールまたはパスワードを確認してください。',
     errorTokenMissing: 'ログイントークンを取得できませんでした。',
@@ -476,6 +498,8 @@ const TRANSLATIONS = {
     saving: '保存中...',
     mainInfo: 'メイン情報',
     brandLabel: 'ヘッダーブランド',
+    tabTitleLabel: 'タブタイトル',
+    tabTitleHelp: 'ブラウザのタブに表示されます。',
     dashboardTitleLabel: 'ダッシュボードタイトル',
     dashboardDescLabel: '説明文',
     mainInfoVisibility: 'メイン情報の表示',
@@ -489,6 +513,8 @@ const TRANSLATIONS = {
     layoutColumnsHelp: 'カテゴリカード内のサービス数',
     dockSeparatorLabel: 'Dockの区切りを表示',
     dockSeparatorHelp: 'カテゴリ間に区切り線を表示します。',
+    lockScreenLabel: 'ロック画面を表示',
+    lockScreenHelp: '最初にロック画面を表示します。',
     themeTitle: 'テーマ',
     themeHelp: 'ブラウザに保存され自動適用されます。',
     systemSummaryTitle: 'システム要約',
@@ -580,6 +606,7 @@ const TRANSLATIONS = {
     loginButton: '登录后编辑',
     close: '关闭',
     loadingSettings: '正在加载设置...',
+    loadingDashboard: '正在加载仪表板...',
     errorSessionExpired: '会话已过期，请重新登录。',
     errorInvalidCredentials: '请检查邮箱或密码。',
     errorTokenMissing: '未获取到登录令牌。',
@@ -590,6 +617,8 @@ const TRANSLATIONS = {
     saving: '保存中...',
     mainInfo: '基本信息',
     brandLabel: '页眉品牌',
+    tabTitleLabel: '标签标题',
+    tabTitleHelp: '显示在浏览器标签页。',
     dashboardTitleLabel: '仪表盘标题',
     dashboardDescLabel: '一句话说明',
     mainInfoVisibility: '主信息显示',
@@ -603,6 +632,8 @@ const TRANSLATIONS = {
     layoutColumnsHelp: '分类卡片内服务列数',
     dockSeparatorLabel: '显示 Dock 分隔线',
     dockSeparatorHelp: '在分类之间显示分隔线。',
+    lockScreenLabel: '显示锁屏',
+    lockScreenHelp: '首次加载时显示锁屏。',
     themeTitle: '主题',
     themeHelp: '保存在浏览器并自动应用。',
     systemSummaryTitle: '系统摘要',
@@ -1082,6 +1113,16 @@ function normalizeConfig(input: DashboardConfig) {
   if (typeof next.showDescription !== 'boolean') {
     next.showDescription = defaultConfig.showDescription;
   }
+  if (typeof next.tabTitle !== 'string' || next.tabTitle.trim().length === 0) {
+    const fallbackTitle =
+      typeof next.title === 'string' && next.title.trim().length > 0
+        ? next.title.trim()
+        : defaultConfig.tabTitle;
+    next.tabTitle = fallbackTitle;
+  }
+  if (typeof next.showLockScreen !== 'boolean') {
+    next.showLockScreen = defaultConfig.showLockScreen;
+  }
   if (typeof next.dockSeparatorEnabled !== 'boolean') {
     next.dockSeparatorEnabled = defaultConfig.dockSeparatorEnabled;
   }
@@ -1103,6 +1144,9 @@ export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [config, setConfig] = useState<DashboardConfig>(defaultConfig);
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const [lockScreenPref, setLockScreenPref] = useState<boolean | null>(null);
+  const [lockScreenPrefLoaded, setLockScreenPrefLoaded] = useState(false);
   const [categories, setCategories] = useState<Category[]>(fallbackCategories);
   const [query, setQuery] = useState('');
   const [weather, setWeather] = useState<WeatherState>({
@@ -1169,6 +1213,23 @@ export default function HomePage() {
       translate(language, key, vars),
     [language]
   );
+  const showBrand = config.showBrand ?? defaultConfig.showBrand;
+  const showTitle = config.showTitle ?? defaultConfig.showTitle;
+  const showDescription = config.showDescription ?? defaultConfig.showDescription;
+  const tabTitle =
+    (config.tabTitle ?? '').trim() ||
+    config.title?.trim() ||
+    defaultConfig.tabTitle;
+  const lockScreenEnabled = lockScreenPrefLoaded
+    ? lockScreenPref ??
+      (configLoaded
+        ? config.showLockScreen ?? defaultConfig.showLockScreen
+        : false)
+    : false;
+  const dockSeparatorEnabled =
+    config.dockSeparatorEnabled ?? defaultConfig.dockSeparatorEnabled;
+  const screenUnlocked = lockScreenEnabled ? unlocked : true;
+  const showLoading = !configLoaded && !lockScreenEnabled;
 
   useEffect(() => {
     setNow(new Date());
@@ -1185,6 +1246,82 @@ export default function HomePage() {
   }, [theme]);
 
   useEffect(() => {
+    if (!configLoaded) return;
+    document.title = tabTitle;
+  }, [tabTitle, configLoaded]);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(DASHBOARD_CACHE_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as DashboardCache;
+      if (!parsed?.config || parsed.version !== DASHBOARD_CACHE_VERSION) {
+        return;
+      }
+
+      const nextConfig = normalizeConfig(parsed.config);
+      const nextCategories =
+        Array.isArray(parsed.categories) && parsed.categories.length
+          ? parsed.categories
+          : fallbackCategories;
+      setConfig(nextConfig);
+      setCategories(nextCategories);
+      setConfigLoaded(true);
+    } catch {
+      // Ignore cache failures and fall back to API.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(LOCK_SCREEN_STORAGE_KEY);
+      if (stored === 'true') {
+        setLockScreenPref(true);
+      } else if (stored === 'false') {
+        setLockScreenPref(false);
+      } else {
+        setLockScreenPref(null);
+      }
+    } catch {
+      setLockScreenPref(null);
+    } finally {
+      setLockScreenPrefLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!configLoaded) return;
+    const next = config.showLockScreen ?? defaultConfig.showLockScreen;
+    setLockScreenPref(next);
+    try {
+      window.localStorage.setItem(LOCK_SCREEN_STORAGE_KEY, String(next));
+    } catch {
+      // Ignore storage failures; lock screen still follows config.
+    }
+  }, [config.showLockScreen, configLoaded]);
+
+  useEffect(() => {
+    if (!configLoaded) return;
+    const cache: DashboardCache = {
+      version: DASHBOARD_CACHE_VERSION,
+      config,
+      categories
+    };
+    try {
+      window.localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      // Ignore cache write failures.
+    }
+  }, [categories, config, configLoaded]);
+
+  useEffect(() => {
+    if (!lockScreenEnabled) {
+      if (idleTimer.current) {
+        window.clearTimeout(idleTimer.current);
+        idleTimer.current = null;
+      }
+      return;
+    }
     if (!unlocked) {
       if (idleTimer.current) {
         window.clearTimeout(idleTimer.current);
@@ -1223,7 +1360,7 @@ export default function HomePage() {
         idleTimer.current = null;
       }
     };
-  }, [unlocked]);
+  }, [lockScreenEnabled, unlocked]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -1401,6 +1538,8 @@ export default function HomePage() {
     } catch {
       setConfig(defaultConfig);
       setCategories(fallbackCategories);
+    } finally {
+      setConfigLoaded(true);
     }
   };
 
@@ -1558,12 +1697,6 @@ export default function HomePage() {
       }))
       .filter((category) => category.services.length > 0);
   }, [query, tonedCategories, isAuthenticated]);
-
-  const showBrand = config.showBrand ?? defaultConfig.showBrand;
-  const showTitle = config.showTitle ?? defaultConfig.showTitle;
-  const showDescription = config.showDescription ?? defaultConfig.showDescription;
-  const dockSeparatorEnabled =
-    config.dockSeparatorEnabled ?? defaultConfig.dockSeparatorEnabled;
 
   const allFavorites = useMemo<DockService[]>(() => {
     return [...categories]
@@ -2020,6 +2153,7 @@ export default function HomePage() {
         body: JSON.stringify({
           config: {
             brandName: draftConfig.brandName,
+            tabTitle: draftConfig.tabTitle,
             language: draftConfig.language,
             serviceGridColumnsLg: draftConfig.serviceGridColumnsLg,
             title: draftConfig.title,
@@ -2027,6 +2161,7 @@ export default function HomePage() {
             showBrand: draftConfig.showBrand,
             showTitle: draftConfig.showTitle,
             showDescription: draftConfig.showDescription,
+            showLockScreen: draftConfig.showLockScreen,
             dockSeparatorEnabled: draftConfig.dockSeparatorEnabled,
             themeKey: draftConfig.themeKey,
             weatherMode: draftConfig.weatherMode,
@@ -2089,92 +2224,104 @@ export default function HomePage() {
 
   return (
     <div className="screen">
-      <LockScreen
-        unlocked={unlocked}
-        isAuthenticated={isAuthenticated}
-        timeLabel={timeLabel}
-        dateLabel={dateLabel}
-        t={(key, vars) => t(key as TranslationKey, vars)}
-        lockRef={lockRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onUnlock={unlockNow}
-      />
+      {lockScreenEnabled ? (
+        <LockScreen
+          unlocked={unlocked}
+          isAuthenticated={isAuthenticated}
+          timeLabel={timeLabel}
+          dateLabel={dateLabel}
+          t={(key, vars) => t(key as TranslationKey, vars)}
+          lockRef={lockRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onUnlock={unlockNow}
+        />
+      ) : null}
 
-      <main
-        className={`home-screen ${unlocked ? 'visible' : ''}`}
-        data-columns={config.serviceGridColumnsLg}
-        style={
-          {
-            '--service-columns': config.serviceGridColumnsLg
-          } as CSSProperties
-        }
-      >
-        <div className="container">
-          <div className="status-bar">
-            <div className="status-left">{timeLabel}</div>
-            <div className="status-right">
-              {showBrand ? (
-                <span className="pill">{config.brandName}</span>
-              ) : null}
+      {showLoading ? (
+        <div className="dashboard-loading">
+          <div className="dashboard-loading-card">
+            <span>{t('loadingDashboard')}</span>
+          </div>
+        </div>
+      ) : null}
+
+      {configLoaded ? (
+        <main
+          className={`home-screen ${screenUnlocked ? 'visible' : ''}`}
+          data-columns={config.serviceGridColumnsLg}
+          style={
+            {
+              '--service-columns': config.serviceGridColumnsLg
+            } as CSSProperties
+          }
+        >
+          <div className="container">
+            <div className="status-bar">
+              <div className="status-left">{timeLabel}</div>
+              <div className="status-right">
+                {showBrand ? (
+                  <span className="pill">{config.brandName}</span>
+                ) : null}
+              </div>
             </div>
+
+            {showTitle || showDescription ? (
+              <section className="hero">
+                {showTitle ? <h1>{config.title}</h1> : null}
+                {showDescription ? <p>{config.description}</p> : null}
+              </section>
+            ) : null}
+
+            <OverviewGrid
+              t={(key, vars) => t(key as TranslationKey, vars)}
+              systemSummaryOrder={systemSummaryOrder}
+              systemSummaryOptions={SYSTEM_SUMMARY_OPTIONS}
+              systemSummaryValues={systemSummaryValues}
+              weather={weather}
+              weatherSummary={weatherSummary}
+              weatherMetaOrder={weatherMetaOrder}
+              weatherMetaOptions={WEATHER_META_OPTIONS}
+              weatherMetaValues={weatherMetaValues}
+            />
+
+            <section className="glass-card search-panel">
+              <div>
+                <h3>{t('searchTitle')}</h3>
+              </div>
+              <input
+                className="search-input compact"
+                placeholder={t('searchPlaceholder')}
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </section>
+
+            <CategoryGrid
+              categories={visibleCategories}
+              t={(key, vars) => t(key as TranslationKey, vars)}
+            />
+
           </div>
 
-          {showTitle || showDescription ? (
-            <section className="hero">
-              {showTitle ? <h1>{config.title}</h1> : null}
-              {showDescription ? <p>{config.description}</p> : null}
-            </section>
-          ) : null}
-
-          <OverviewGrid
-            t={(key, vars) => t(key as TranslationKey, vars)}
-            systemSummaryOrder={systemSummaryOrder}
-            systemSummaryOptions={SYSTEM_SUMMARY_OPTIONS}
-            systemSummaryValues={systemSummaryValues}
-            weather={weather}
-            weatherSummary={weatherSummary}
-            weatherMetaOrder={weatherMetaOrder}
-            weatherMetaOptions={WEATHER_META_OPTIONS}
-            weatherMetaValues={weatherMetaValues}
-          />
-
-          <section className="glass-card search-panel">
-            <div>
-              <h3>{t('searchTitle')}</h3>
-            </div>
-            <input
-              className="search-input compact"
-              placeholder={t('searchPlaceholder')}
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </section>
-
-          <CategoryGrid
-            categories={visibleCategories}
+          <Dock
+            dockEntries={dockEntries}
+            dockHiddenFavorites={dockHiddenFavorites}
+            dockMenuOpen={dockMenuOpen}
+            dockRef={dockRef}
+            dockMenuRef={dockMenuRef}
+            dockMoreRef={dockMoreRef}
+            onToggleMenu={() => setDockMenuOpen((prev) => !prev)}
+            onOpenSettings={openSettings}
             t={(key, vars) => t(key as TranslationKey, vars)}
           />
-
-        </div>
-
-        <Dock
-          dockEntries={dockEntries}
-          dockHiddenFavorites={dockHiddenFavorites}
-          dockMenuOpen={dockMenuOpen}
-          dockRef={dockRef}
-          dockMenuRef={dockMenuRef}
-          dockMoreRef={dockMoreRef}
-          onToggleMenu={() => setDockMenuOpen((prev) => !prev)}
-          onOpenSettings={openSettings}
-          t={(key, vars) => t(key as TranslationKey, vars)}
-        />
-      </main>
+        </main>
+      ) : null}
 
       {settingsOpen ? (
         <SettingsModal

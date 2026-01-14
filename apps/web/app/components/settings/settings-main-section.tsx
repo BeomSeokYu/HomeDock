@@ -31,6 +31,19 @@ export function SettingsMainSection({
           />
         </div>
         <div className="auth-field">
+          <label>{t('tabTitleLabel')}</label>
+          <input
+            type="text"
+            value={draftConfig.tabTitle ?? defaultConfig.tabTitle}
+            onChange={(event) =>
+              setDraftConfig((prev) =>
+                prev ? { ...prev, tabTitle: event.target.value } : prev
+              )
+            }
+          />
+          <span className="helper-text">{t('tabTitleHelp')}</span>
+        </div>
+        <div className="auth-field">
           <label>{t('dashboardTitleLabel')}</label>
           <input
             type="text"

@@ -91,6 +91,23 @@ export function SettingsLayoutSection({
           {t('dockSeparatorLabel')}
           <span className="helper-text">{t('dockSeparatorHelp')}</span>
         </label>
+        <label className="checkbox-pill">
+          <input
+            type="checkbox"
+            checked={
+              draftConfig.showLockScreen ?? defaultConfig.showLockScreen
+            }
+            onChange={(event) =>
+              setDraftConfig((prev) =>
+                prev
+                  ? { ...prev, showLockScreen: event.target.checked }
+                  : prev
+              )
+            }
+          />
+          {t('lockScreenLabel')}
+          <span className="helper-text">{t('lockScreenHelp')}</span>
+        </label>
       </div>
     </section>
   );

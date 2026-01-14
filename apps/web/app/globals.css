@@ -208,6 +208,24 @@ body::after {
   opacity: 1;
 }
 
+.dashboard-loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-loading-card {
+  padding: 14px 22px;
+  border-radius: 18px;
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow);
+}
+
 .hero {
   margin-top: 10px;
   display: flex;
