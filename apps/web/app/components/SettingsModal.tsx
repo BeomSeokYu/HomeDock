@@ -1,6 +1,6 @@
-import type { Dispatch, FormEvent, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { Category, DashboardConfig, Service } from '@homedock/types';
-import { SettingsAuthForm } from './settings/settings-auth-form';
+import { AppIcon } from './AppIcon';
 import { SettingsCategoriesSection } from './settings/settings-categories-section';
 import { SettingsLayoutSection } from './settings/settings-layout-section';
 import { SettingsMainSection } from './settings/settings-main-section';
@@ -35,9 +35,6 @@ type LocationOption = {
 
 type SettingsModalProps = {
   t: (key: string, vars?: Record<string, string | number>) => string;
-  isAuthenticated: boolean;
-  loginEmail: string;
-  loginPassword: string;
   loginError: string | null;
   saving: boolean;
   draftConfig: DashboardConfig | null;
@@ -57,9 +54,6 @@ type SettingsModalProps = {
   locationQuery: string;
   locationOptions: LocationOption[];
   onClose: () => void;
-  onLoginSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onLoginEmailChange: (value: string) => void;
-  onLoginPasswordChange: (value: string) => void;
   onLogout: () => void;
   onSave: () => void;
   setDraftConfig: Dispatch<SetStateAction<DashboardConfig | null>>;
@@ -87,9 +81,6 @@ type SettingsModalProps = {
 
 export function SettingsModal({
   t,
-  isAuthenticated,
-  loginEmail,
-  loginPassword,
   loginError,
   saving,
   draftConfig,
@@ -109,9 +100,6 @@ export function SettingsModal({
   locationQuery,
   locationOptions,
   onClose,
-  onLoginSubmit,
-  onLoginEmailChange,
-  onLoginPasswordChange,
   onLogout,
   onSave,
   setDraftConfig,
@@ -143,24 +131,16 @@ export function SettingsModal({
           </div>
           <button
             type="button"
-            className="button secondary"
+            className="button secondary icon"
             onClick={onClose}
+            aria-label={t('close')}
+            title={t('close')}
           >
-            {t('close')}
+            <AppIcon name="close" size={18} />
           </button>
         </div>
 
-        {!isAuthenticated ? (
-          <SettingsAuthForm
-            t={t}
-            loginEmail={loginEmail}
-            loginPassword={loginPassword}
-            loginError={loginError}
-            onLoginSubmit={onLoginSubmit}
-            onLoginEmailChange={onLoginEmailChange}
-            onLoginPasswordChange={onLoginPasswordChange}
-          />
-        ) : draftConfig ? (
+        {draftConfig ? (
           <>
             <div className="settings-body">
               <SettingsMainSection

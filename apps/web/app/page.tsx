@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, PointerEvent } from 'react';
 import { CategoryGrid } from './components/CategoryGrid';
 import { Dock } from './components/Dock';
+import { ConfirmModal } from './components/confirm-modal';
+import { LoginModal } from './components/login-modal';
 import { LockScreen } from './components/LockScreen';
 import { OverviewGrid } from './components/OverviewGrid';
 import { SettingsModal } from './components/SettingsModal';
@@ -242,7 +244,14 @@ const TRANSLATIONS = {
     settingsTitle: '대시보드 구성 변경',
     settingsSubtitle:
       '메인 페이지는 로그인 없이 공개되고, 구성 변경은 로그인 후 가능합니다.',
+    loginKicker: '관리자 인증',
+    loginTitle: '로그인',
+    loginSubtitle: '대시보드를 편집하려면 로그인이 필요합니다.',
     loginEmail: '관리자 이메일',
+    cancel: '취소',
+    logoutConfirmTitle: '로그아웃하시겠습니까?',
+    logoutConfirmDescription: '편집 세션이 종료됩니다.',
+    logoutConfirmConfirm: '로그아웃',
     loginPassword: '관리자 비밀번호',
     loginButton: '로그인 후 편집',
     close: '닫기',
@@ -297,6 +306,9 @@ const TRANSLATIONS = {
     searchPlaceholder: '서비스 검색...',
     serviceCount: '{count}개 서비스',
     dockMore: '더보기',
+    dockLogin: '로그인',
+    dockLogout: '로그아웃',
+    dockSettings: '설정',
     systemSummaryCard: '시스템 요약',
     weatherCard: '오늘의 날씨',
     iconName: '아이콘 이름',
@@ -362,7 +374,14 @@ const TRANSLATIONS = {
     settingsTitle: 'Edit Dashboard',
     settingsSubtitle:
       'The main page is public. Editing requires an admin login.',
+    loginKicker: 'Admin access',
+    loginTitle: 'Sign in',
+    loginSubtitle: 'Sign in to edit the dashboard.',
     loginEmail: 'Admin email',
+    cancel: 'Cancel',
+    logoutConfirmTitle: 'Sign out?',
+    logoutConfirmDescription: 'Your editing session will end.',
+    logoutConfirmConfirm: 'Sign out',
     loginPassword: 'Admin password',
     loginButton: 'Sign in to edit',
     close: 'Close',
@@ -417,6 +436,9 @@ const TRANSLATIONS = {
     searchPlaceholder: 'Search services...',
     serviceCount: '{count} services',
     dockMore: 'More',
+    dockLogin: 'Sign in',
+    dockLogout: 'Sign out',
+    dockSettings: 'Settings',
     systemSummaryCard: 'System summary',
     weatherCard: 'Today’s weather',
     iconName: 'Icon name',
@@ -482,7 +504,14 @@ const TRANSLATIONS = {
     settingsTitle: 'ダッシュボード設定',
     settingsSubtitle:
       'メインページは公開。編集はログインが必要です。',
+    loginKicker: '管理者認証',
+    loginTitle: 'ログイン',
+    loginSubtitle: 'ダッシュボードを編集するにはログインが必要です。',
     loginEmail: '管理者メール',
+    cancel: 'キャンセル',
+    logoutConfirmTitle: 'ログアウトしますか？',
+    logoutConfirmDescription: '編集セッションが終了します。',
+    logoutConfirmConfirm: 'ログアウト',
     loginPassword: '管理者パスワード',
     loginButton: 'ログインして編集',
     close: '閉じる',
@@ -537,6 +566,9 @@ const TRANSLATIONS = {
     searchPlaceholder: 'サービス検索...',
     serviceCount: '{count}件のサービス',
     dockMore: 'さらに表示',
+    dockLogin: 'ログイン',
+    dockLogout: 'ログアウト',
+    dockSettings: '設定',
     systemSummaryCard: 'システム要約',
     weatherCard: '今日の天気',
     iconName: 'アイコン名',
@@ -601,7 +633,14 @@ const TRANSLATIONS = {
     settingsKicker: 'Dashboard Settings',
     settingsTitle: '编辑仪表盘',
     settingsSubtitle: '主页公开，编辑需要管理员登录。',
+    loginKicker: '管理员认证',
+    loginTitle: '登录',
+    loginSubtitle: '登录后才可编辑仪表盘。',
     loginEmail: '管理员邮箱',
+    cancel: '取消',
+    logoutConfirmTitle: '确定登出吗？',
+    logoutConfirmDescription: '编辑会话将结束。',
+    logoutConfirmConfirm: '登出',
     loginPassword: '管理员密码',
     loginButton: '登录后编辑',
     close: '关闭',
@@ -656,6 +695,9 @@ const TRANSLATIONS = {
     searchPlaceholder: '搜索服务...',
     serviceCount: '{count} 个服务',
     dockMore: '更多',
+    dockLogin: '登录',
+    dockLogout: '登出',
+    dockSettings: '设置',
     systemSummaryCard: '系统摘要',
     weatherCard: '今日天气',
     iconName: '图标名称',
@@ -1185,6 +1227,9 @@ export default function HomePage() {
   const [saving, setSaving] = useState(false);
   const [dockVisibleCount, setDockVisibleCount] = useState(3);
   const [dockMenuOpen, setDockMenuOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginRedirect, setLoginRedirect] = useState<'settings' | null>(null);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const lockRef = useRef<HTMLDivElement | null>(null);
   const dockRef = useRef<HTMLDivElement | null>(null);
   const dockMenuRef = useRef<HTMLDivElement | null>(null);
@@ -1244,6 +1289,18 @@ export default function HomePage() {
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (!isAuthenticated && settingsOpen) {
+      setSettingsOpen(false);
+    }
+  }, [isAuthenticated, settingsOpen]);
+
+  useEffect(() => {
+    if (!isAuthenticated && logoutConfirmOpen) {
+      setLogoutConfirmOpen(false);
+    }
+  }, [isAuthenticated, logoutConfirmOpen]);
 
   useEffect(() => {
     if (!configLoaded) return;
@@ -1548,11 +1605,13 @@ export default function HomePage() {
       const response = await fetch(`${API_BASE}/dashboard/admin`, {
         credentials: 'include'
       });
-      if (response.status === 401) {
-        setIsAuthenticated(false);
-        setLoginError(t('errorSessionExpired'));
-        return;
-      }
+    if (response.status === 401) {
+      setIsAuthenticated(false);
+      setLoginError(t('errorSessionExpired'));
+      setSettingsOpen(false);
+      openLogin(true, true);
+      return;
+    }
       if (!response.ok) {
         throw new Error('Failed to load admin data');
       }
@@ -1769,8 +1828,11 @@ export default function HomePage() {
       const totalFavorites = allFavorites.length;
       const itemSize = 46;
       const separatorSize = 10;
+      const includeGroupSeparator = dockSeparatorEnabled && totalFavorites > 0;
       const reservedWidths = (includeMore: boolean) => [
+        ...(includeGroupSeparator ? [separatorSize] : []),
         ...(includeMore ? [itemSize] : []),
+        itemSize,
         itemSize
       ];
 
@@ -1888,14 +1950,27 @@ export default function HomePage() {
     [language, weather.code]
   );
 
-  const openSettings = () => {
-    setSettingsOpen(true);
-    if (isAuthenticated) {
-      void loadAdminDashboard();
-    } else {
-      setDraftConfig(null);
-      setDraftCategories([]);
+  const openLogin = (redirectToSettings = false, preserveError = false) => {
+    if (!preserveError) {
+      setLoginError(null);
     }
+    setLoginRedirect(redirectToSettings ? 'settings' : null);
+    setLoginOpen(true);
+  };
+
+  const closeLogin = () => {
+    setLoginOpen(false);
+    setLoginRedirect(null);
+    setLoginError(null);
+  };
+
+  const openSettings = () => {
+    if (!isAuthenticated) {
+      openLogin(true);
+      return;
+    }
+    setSettingsOpen(true);
+    void loadAdminDashboard();
   };
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -1916,7 +1991,13 @@ export default function HomePage() {
       }
 
       setIsAuthenticated(true);
-      await loadAdminDashboard();
+      if (loginRedirect === 'settings') {
+        setSettingsOpen(true);
+        await loadAdminDashboard();
+      }
+      setLoginError(null);
+      setLoginOpen(false);
+      setLoginRedirect(null);
     } catch {
       setLoginError(t('errorLoginFailed'));
     }
@@ -1933,6 +2014,22 @@ export default function HomePage() {
     }
     setIsAuthenticated(false);
     setLoginError(null);
+    setSettingsOpen(false);
+    setLoginOpen(false);
+    setLoginRedirect(null);
+  };
+
+  const handleAuthClick = () => {
+    if (isAuthenticated) {
+      setLogoutConfirmOpen(true);
+    } else {
+      openLogin(false);
+    }
+  };
+
+  const confirmLogout = () => {
+    setLogoutConfirmOpen(false);
+    void handleLogout();
   };
 
   const updateCategory = (categoryId: string, patch: Partial<Category>) => {
@@ -2313,9 +2410,12 @@ export default function HomePage() {
             dockEntries={dockEntries}
             dockHiddenFavorites={dockHiddenFavorites}
             dockMenuOpen={dockMenuOpen}
+            dockSeparatorEnabled={dockSeparatorEnabled}
+            isAuthenticated={isAuthenticated}
             dockRef={dockRef}
             dockMenuRef={dockMenuRef}
             dockMoreRef={dockMoreRef}
+            onAuthClick={handleAuthClick}
             onToggleMenu={() => setDockMenuOpen((prev) => !prev)}
             onOpenSettings={openSettings}
             t={(key, vars) => t(key as TranslationKey, vars)}
@@ -2323,12 +2423,9 @@ export default function HomePage() {
         </main>
       ) : null}
 
-      {settingsOpen ? (
+      {settingsOpen && isAuthenticated ? (
         <SettingsModal
           t={(key, vars) => t(key as TranslationKey, vars)}
-          isAuthenticated={isAuthenticated}
-          loginEmail={loginEmail}
-          loginPassword={loginPassword}
           loginError={loginError}
           saving={saving}
           draftConfig={draftConfig}
@@ -2348,10 +2445,6 @@ export default function HomePage() {
           locationQuery={locationQuery}
           locationOptions={locationOptions}
           onClose={() => setSettingsOpen(false)}
-          onLoginSubmit={handleLogin}
-          onLoginEmailChange={setLoginEmail}
-          onLoginPasswordChange={setLoginPassword}
-          onLogout={handleLogout}
           onSave={handleSave}
           setDraftConfig={setDraftConfig}
           onLocationQueryChange={setLocationQuery}
@@ -2378,6 +2471,31 @@ export default function HomePage() {
           updateService={updateService}
           moveService={moveService}
           removeService={removeService}
+          onLogout={() => setLogoutConfirmOpen(true)}
+        />
+      ) : null}
+
+      {loginOpen ? (
+        <LoginModal
+          t={(key, vars) => t(key as TranslationKey, vars)}
+          loginEmail={loginEmail}
+          loginPassword={loginPassword}
+          loginError={loginError}
+          onClose={closeLogin}
+          onLoginSubmit={handleLogin}
+          onLoginEmailChange={setLoginEmail}
+          onLoginPasswordChange={setLoginPassword}
+        />
+      ) : null}
+
+      {logoutConfirmOpen ? (
+        <ConfirmModal
+          title={t('logoutConfirmTitle')}
+          description={t('logoutConfirmDescription')}
+          confirmLabel={t('logoutConfirmConfirm')}
+          cancelLabel={t('cancel')}
+          onCancel={() => setLogoutConfirmOpen(false)}
+          onConfirm={confirmLogout}
         />
       ) : null}
     </div>
