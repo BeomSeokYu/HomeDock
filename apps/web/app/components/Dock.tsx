@@ -11,9 +11,12 @@ type DockProps = {
   dockEntries: ReadonlyArray<DockEntry>;
   dockHiddenFavorites: ReadonlyArray<Service>;
   dockMenuOpen: boolean;
+  dockSeparatorEnabled: boolean;
+  isAuthenticated: boolean;
   dockRef: RefObject<HTMLDivElement>;
   dockMenuRef: RefObject<HTMLDivElement>;
   dockMoreRef: RefObject<HTMLButtonElement>;
+  onAuthClick: () => void;
   onToggleMenu: () => void;
   onOpenSettings: () => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
@@ -23,14 +26,21 @@ export function Dock({
   dockEntries,
   dockHiddenFavorites,
   dockMenuOpen,
+  dockSeparatorEnabled,
+  isAuthenticated,
   dockRef,
   dockMenuRef,
   dockMoreRef,
+  onAuthClick,
   onToggleMenu,
   onOpenSettings,
   t
 }: DockProps) {
   const hasHidden = dockHiddenFavorites.length > 0;
+  const authLabel = isAuthenticated ? t('dockLogout') : t('dockLogin');
+  const settingsLabel = t('dockSettings');
+  const showGroupSeparator =
+    dockSeparatorEnabled && (dockEntries.length > 0 || hasHidden);
 
   return (
     <div className="dock" ref={dockRef}>
@@ -61,7 +71,25 @@ export function Dock({
           {'\u22ef'}
         </button>
       ) : null}
-      <button type="button" className="dock-item" onClick={onOpenSettings}>
+      {showGroupSeparator ? (
+        <span className="dock-separator" aria-hidden="true" />
+      ) : null}
+      <button
+        type="button"
+        className="dock-item"
+        onClick={onAuthClick}
+        aria-label={authLabel}
+        title={authLabel}
+      >
+        <AppIcon name={isAuthenticated ? 'shield' : 'user'} size={22} />
+      </button>
+      <button
+        type="button"
+        className="dock-item"
+        onClick={onOpenSettings}
+        aria-label={settingsLabel}
+        title={settingsLabel}
+      >
         <AppIcon name="settings" size={22} />
       </button>
       {hasHidden && dockMenuOpen ? (
