@@ -12,6 +12,7 @@ services:
       - ./homedock-data:/data
     ports:
       - "${API_PORT:-4000}:4000"
+    restart: unless-stopped
   web:
     build:
       context: .
@@ -24,5 +25,6 @@ services:
       - PORT=3000
     ports:
       - "${WEB_PORT:-3000}:3000"
+    restart: unless-stopped
     depends_on:
       - api
