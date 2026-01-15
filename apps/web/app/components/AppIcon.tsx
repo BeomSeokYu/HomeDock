@@ -26,6 +26,8 @@ import {
   ShieldCheck,
   Sun,
   TelevisionSimple,
+  UserCircle,
+  X,
   Wind
 } from 'phosphor-react';
 
@@ -51,6 +53,8 @@ const iconMap = {
   shield: ShieldCheck,
   sync: ArrowsClockwise,
   tv: TelevisionSimple,
+  user: UserCircle,
+  close: X,
   workflow: FlowArrow,
   sun: Sun,
   rain: CloudRain,
